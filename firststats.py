@@ -1,6 +1,6 @@
-import urllib2
-import base64
+import requests
 import json
+import base64
 import configparser
 import os
 import mysql.connector
@@ -34,12 +34,15 @@ class Data:
         #     database = self.config['MySQL']['Database']
         # )
         # self.cursor = self.db.cursor()
+
+        # # Sets up a requests session
+        # req = requests.Session()
+        # req.auth = (self.username, self.password)
+        # req.headers.update({'Accept': 'application/json'})
     def GetMatchData (self):
-        request = urllib2.Request('%s/v2.0/2017/matches/%s' % (self.host, self.matchnum))
-        request.add_header('Accept', 'application/json')
-        request.add_header('Authorization', 'Basic %s' % self.authString)
-        matchJSON = json.load(urllib2.urlopen(request))
-        self.matchData = matchJSON
+        response = requests.get('%s/v2.0/2017/matches/%s' % (self.host, self.matchnum), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.authString})
+        self.matchData = response.json()
+
 class Sheets:
     def __init__(self):
         # Google Drive OAuth2 Setup
@@ -51,7 +54,7 @@ class Sheets:
 def main():
     data = Data()
     data.GetMatchData()
-    print(data.matchData)
+    print(json.dumps(data.matchData, sort_keys=True, indent=4, default=str))
 
 if __name__ == "__main__":
     main()
