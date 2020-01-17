@@ -14,7 +14,7 @@ import collections
 # pip gspread, gspread_formatting, pyopenssl and oauth2client for google sheets functionality
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-import gspread_formatting
+from gspread_formatting import *
 
 class Config:
     def __init__(self):
@@ -41,16 +41,22 @@ class MatchData:
         self.config = config
     def getScheduleData (self):
         response = requests.get('%s/v2.0/2019/schedule/%s/qual/hybrid' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-        self.scheduleData = response.json()
-        return self.scheduleData
+        self.qualScheduleData = response.json()
+        response = requests.get('%s/v2.0/2019/schedule/%s/playoff/hybrid' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+        self.playoffPlayoffData = response.json()
     def getScoreData (self):
         response = requests.get('%s/v2.0/2019/scores/%s/qual' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-        self.scoreData = response.json()
-        return self.scoreData
+        self.qualScoreData = response.json()
+        response = requests.get('%s/v2.0/2019/scores/%s/playoff' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+        self.playoffScoreData = response.json()
+    def getEventData (self):
+        response = requests.get('%s/v2.0/2019/events?eventCode=%s/' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+        self.eventData = response.json()
 
 class Sheets:
     def __init__(self, config, data):
         self.config = config
+        self.data = data
         # Google Drive OAuth2 Setup
         # gspread.readthedocs.io/en/latest/
         scope = ['https://spreadsheets.google.com/feeds',
@@ -64,11 +70,23 @@ class Sheets:
             self.ws = self.sh.worksheet(str(self.config.eventid))
         except Exception as e:
             self.ws = self.sh.add_worksheet(title=str(self.config.eventid), rows="200", cols="30")
+            # Formatting the Cells
+            title_format = cellFormat(textFormat = textFormat(fontSize = 30, bold=True))
+            venue_format = cellFormat(textFormat = textFormat(fontSize = 20, bold=True))
+            format_cell_range(self.ws, 'A1:A1', title_format)
+            format_cell_range(self.ws, 'A2:A2', venue_format)
+            # Adding the event info to the first 2 rows
+            self.ws.update_cell(1, 1, self.data.eventData["Events"]["name"])
+            self.ws.update_cell(1, 2, self.data.eventData["Events"]["venue"])
             print("Worksheet Created: " + str(e))
-        # TODO: Creates the template for all the matches
-    def getMatchDict(self, matchtype, matchnum):
-        # TODO: Returns the match's dictionary based on matchtype and matchid
+
+    def getScheduleDict(self, matchtype, matchnum):
+        # TODO: Returns the match's schedule dictionary based on matchtype and matchid
         #       This is for setting up the Match objects
+        if (matchtype == "Qualification"):
+            return self.data.qualScheduleData["Matches"][matchnum - 1]
+        if (matchtype == "Playoff"):
+            return self.data.playoffScheduleData["Matches"][matchnum - 1]
         print("nothing")
     def getScoreDict(self, matchtype, matchnum):
         # TODO: Returns the match's score dictionary based on matchtype and matchid
@@ -83,25 +101,46 @@ class Sheets:
         print("nothing")
 
 class Match:
-    def __init__(self, matchdict, scoredict):
+    # A class that represents a match entry in the spreadsheet
+    # One is created for each match in an event
+    def __init__(self, matchdict, scoredict, ws):
         # Sets up origin and matchdict setup
         self.match = matchdict
         self.score = scoredict
+        self.ws = ws
+        self.setup = True
         self.matchnum = self.match["matchNumber"]
-        self.o_x = 0
+        self.o_x = 1
         self.o_y = 0
         # TODO: Find entry position in sheets or makes the entry if it doesn't exist, then sets origin to entry position
+        # Finds the coordinates of the entry
+        try:
+            # Try to find the cell
+            cell = self.ws.find ("%s Match #%s" % matchdict["tournamentLevel"], str(matchdict["matchNumber"]))
+            self.o_y = cell.row
+            self.setup = True
+        except Exception as e:
+            # If the search fails, get the location of the last entry and set the origin below it
+            cell_list = worksheet.findall("Auto Score")
+            self.o_y = cell_list[(len(cell_list) - 1)].row + 6 # 6 is how many rows needs to be added to the bottom of Auto score to have a spot for a new entry
+            self.setup = False
+        if (self.setup == False):
+            # Creates the entry
+            print("nothing")
+
+
+                
     def isDataValid(self):
         # TODO: Checks to see if the data is valid(int or ~), returns true or false
         print("nothing")
     def pushData(self):
         # TODO: Push all info from dict into sheet if data valid
-        #       Also add data to sheet
+        #       Also add data to team sheet
         print("nothing")
     def pushNullandPredict(self):
         # TODO: Push ~ into fields and predict data if data not valid
         print("nothing")
-    def checkEntry(self, matchtype, matchnum):
+    def checkEntry(self):
         # TODO: Checks the entry in sheets to see if it matches the dict data
         #       If it doesn't match and is null, push new data (usually means match was played)
         #       If it doesn't match and isn't null, push new data and throw exception (means program fucked up somehow)
@@ -121,8 +160,6 @@ def main():
 
     data.getScheduleData()
     data.getScoreData()
-    print(json.dumps(data.scheduleData, sort_keys=True, indent=4, default=str))
-    print(json.dumps(data.scoreData, sort_keys=True, indent=4, default=str))
 
     sheets.worksheetSetup()
 
