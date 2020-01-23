@@ -1,118 +1,14 @@
 ############################################################################################################################
-# MMMMMMMMMMMMMMMMWKOOKNMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMMMMMMWXOkdlxXWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMMMMMWXOkdc;:oKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMMMMWXOkdl;;;;oKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMMMWXOkdc;;;;;;l0WMMMMMMMMMMMMMMMMMMMMWNWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMMWXOkxl;;;:c:;;lOWMMMMMMMMMMMMMMMMMMXkloONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMMXOkxl;;;ckOo:;;ckNMMMMMMMMMMMMMMWXkl;,,;lONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMMMXOkxl;;;cOWW0o:;;:kNMMMMMMMMMMMMNOl;,,,,,,;lONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMWXOkxl;;;cOWMMWKd:;;:xXWWWWWWMMMNOl;,,,:ll:,,,;lkXWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMMXOkxl;;;cOWMMMMWKdc;;:okOOOO000kl;,,,:okOkxo:;,,;ckXWWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMMXOkxl;;;cONMMMMWX0kdc;;;cx000ko:;,,,:lkXWNXOkxo:;,,,coxXWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMMXOkxl;;;cOWMMMWX0kO0Kkl;;;l0N0o;,,,;ld0WMMMMWXOkxoc;,,,,cxKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMMXOkxl;;;cONMMMMXO0XNNX0dc;;;cl:,,,;lk000NMMMMMMWX0kxoc;,,,,:xKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMMXOkxl;;;cONMMMMWKkOkxdlcc:;;;;;,,,:dKWMWXNMMMMMMMMWX0kdc;,,,,,lKMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMMXOkxl:;;:xKKXWMMW0l::;;;;;;;;:::;,,,ckXWMMMMMMWWMMMMMXxc;,,,,;lONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MMXOkxl:;;;cllcxNMMMNx:;;:codxkkxxdl:,,,;ckNMMMMWXXWMMN0o;,,,,;lkKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM #
-# MNOkxl:;;;;;;;;lONMMMN0O0KNNWMMWNKOkdl:,;lkNMMMWK0XMN0o;,,,;:cx0OkkkkkkkkOXXOkkk0NXOkkkkkkkkOKWMWN0kxdddxOXWKOOOOOOOOOOO #
-# NOkxl:;;;;;:cloxOOKWMMMMMMMMMMMMMMNK00OOKNMMMWX0OKN0o:,,,;cxOKNk,........,xl....c0o..........'o0o,........;o;..........' #
-# 0kxl::lodkO0XNWWWKOOKXWMMMMMMMMMMMMMWWMMMMWNK0kddkd:,,,;cxKNWMNl....'loookk;....xO;....lx,....;;....:xoccllolc,.....;ccx #
-# NX0O0KNNWMMMMMMMMWN0kkO0KXNNWWWWWWWWWNNXK0Okxdl:,,,,,;cxKNMMMM0,.....;;;lOd....;0d.....cc...,dk:.....';:oONWMNo....;KMWM #
-# MMMMMMMMMMMMMMMMMMMWNX0OkkkkOO00000OOOkkkkkkxdc;,,,;cd0NMMMMMWd.....',''lk:....o0:..........:KWKxl:,......dWM0;....oWMMM #
-# MMMMMMMMMMMMMMMMMMMMMMWWNXK000OOOOOO00KKXNNXOkxoc;cd0NWMMMMMMK:....lKXXXNx....,Ox....,kd'....collldOx,....dWWd....,0MMMM #
-# MMMMMMMMMMMMMMMMMMMMMMMMMMMMMWWWWWWWWMMMMMMMWX0kxx0NWMMMMMMWWx....,OMMMMXc....l0c....oNk'...,c,....''...,dNMX:....lKNWMM #
-# MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNK0XWMMMMMMMMWNx;,,,oXMMMMKl,,,;kKl,,,:OM0:,,,l0Oc'....';dKWMM0c''';kKXWMM #
+# FirstSheets                                                                                                              #
+# Used to store and retrieve data from the Google Sheets                                                                   #
+# Implements CSQP to use less queries                                                                                      #
 ############################################################################################################################
- #                                                   FIRST STATS v1.0 2020                                                #
- #                                     A statistical scouting application for FIRST Robotics                              #
- #                                                 Written By: Mitch Zakocs                                               #
-############################################################################################################################
-
-
-
-import requests
-import json
-import base64
-import configparser
-import os
-import collections
-import time
 
 # pip gspread, gspread_formatting, pyopenssl and oauth2client for google sheets functionality
+import time
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
-
-class Config:
-    def __init__(self):
-        # Opens the config file or creates it if it doesn't exist
-        self.config = configparser.ConfigParser()
-        if not os.path.exists('config.ini'):
-            self.config ['Event Config'] = {'eventid':'CMPMO'}
-            self.config ['FIRST API'] = {'Host':'', 'Username':'', 'Token':'frc-api.firstinspires.org'}
-            self.config ['Google Sheets'] = {'sheetid': ''}
-            with open ('config.ini', 'w') as configfile:
-                self.config.write(configfile)
-        # Reads config file for values
-        self.config.read('config.ini')
-        self.eventid = self.config['Event Config']['eventid']
-        self.sheetid = self.config['Google Sheets']['sheetid']
-        self.host = self.config['FIRST API']['Host']
-        self.username = self.config['FIRST API']['Username']
-        self.password = self.config['FIRST API']['Token']
-        self.authString = base64.b64encode('%s:%s' % (self.username, self.password))
-    # TODO: Make config changable from sheets file
-
-class MatchData:
-    def __init__(self, config, testing = False):
-        # Class Imports
-        self.config = config
-        self.testing = testing
-
-    ### Data Retrieval Functions ###
-    ## Gets Data from the FIRST API
-    # Testing parameter allows usage of a local JSON file for testing instead of the FIRST API
-    # DPrint parameter formats the dictionary into a readable format and prints it
-    def getScheduleData (self, dprint = False):
-        if (self.testing == True):
-            with open('testing/qualscheduledata.json') as json_file:
-                self.qualScheduleData = json.load(json_file)
-            with open('testing/playoffscheduledata.json') as json_file:
-                self.playoffScheduleData = json.load(json_file)
-        else:    
-            response = requests.get('%s/v2.0/2019/schedule/%s/qual/hybrid' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-            self.qualScheduleData = response.json()["Schedule"]
-            response = requests.get('%s/v2.0/2019/schedule/%s/playoff/hybrid' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-            self.playoffScheduleData = response.json()["Schedule"]
-        if dprint == True:
-            print(json.dumps(self.qualScheduleData, sort_keys=True, indent=4))
-            print(json.dumps(self.playoffScheduleData, sort_keys=True, indent=4))
-
-    def getScoreData (self, dprint = False):
-        if (self.testing == True):
-            with open('testing/qualscoredata.json') as json_file:
-                self.qualScoreData = json.load(json_file)
-            with open('testing/playoffscoredata.json') as json_file:
-                self.playoffScoreData = json.load(json_file)
-        else:
-            response = requests.get('%s/v2.0/2019/scores/%s/qual' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-            self.qualScoreData = response.json()["MatchScores"]
-            response = requests.get('%s/v2.0/2019/scores/%s/playoff' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-            self.playoffScoreData = response.json()["MatchScores"]
-        if dprint == True:
-            print(json.dumps(self.qualScoreData, sort_keys=True, indent=4))
-            print(json.dumps(self.playoffScoreData, sort_keys=True, indent=4))
-
-    def getEventData (self, dprint = False):
-        if (self.testing == True):
-            with open('testing/eventdata.json') as json_file:
-                self.eventData = json.load(json_file)
-        else:    
-            response = requests.get('%s/v2.0/2019/events?eventCode=%s' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-            self.eventData = response.json()["Events"][0]
-        if dprint == True:
-            print(json.dumps(self.eventData, sort_keys=True, indent=4))
 
 class Sheets:
     def __init__(self, config, data):
@@ -122,8 +18,7 @@ class Sheets:
 
         # Google Drive OAuth2 Setup
         # gspread.readthedocs.io/en/latest/
-        scope = ['https://spreadsheets.google.com/feeds',
-         'https://www.googleapis.com/auth/drive']
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         credentials = ServiceAccountCredentials.from_json_keyfile_name('FIRST Python Stats-c64a29c90ec3.json', scope)
         self.gc = gspread.authorize(credentials)
         self.sh = self.gc.open_by_key(self.config.sheetid)
@@ -224,8 +119,12 @@ class Sheets:
         csqp.updateCellValue(3, 5, match, match.schedule["teams"][5]["teamNumber"]) # Blue
 
         csqp.updateCellValue(1, 6, match, "Switch Level")
-        csqp.updateCellValue(2, 6, match, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
-        csqp.updateCellValue(3, 6, match, (match.score["alliances"][0]["endgameRungIsLevel"] == "IsLevel")) # Blue
+        if not(match.score["alliances"][1]["endgameRungIsLevel"] == "null"):
+            csqp.updateCellValue(2, 6, match, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
+            csqp.updateCellValue(3, 6, match, (match.score["alliances"][0]["endgameRungIsLevel"] == "IsLevel")) # Blue
+        else:
+            csqp.updateCellValue(2, 6, match, "null") # Red
+            csqp.updateCellValue(3, 6, match, "null") # Blue
 
         csqp.updateCellValue(1, 7, match, "Ranking Points")
         csqp.updateCellValue(2, 7, match, match.score["alliances"][1]["rp"]) # Red
@@ -253,14 +152,21 @@ class Sheets:
         csqp.updateCellValue(3, 11, match, match.score["alliances"][0]["autoCellsBottom"]) # Blue
 
         csqp.updateCellValue(1, 12, match, "Auto Total")
-        csqp.updateCellValue(2, 12, match, match.score["alliances"][1]["autoPoints"]) # Red
-        csqp.updateCellValue(3, 12, match, match.score["alliances"][0]["autoPoints"]) # Blue
+        if not(match.score["alliances"][1]["autoPoints"] == "null"):
+            csqp.updateCellValue(2, 12, match, (int(match.score["alliances"][1]["autoCellsInner"]) + int(match.score["alliances"][1]["autoCellsOuter"]) + int(match.score["alliances"][1]["autoCellsBottom"]))) # Red
+            csqp.updateCellValue(3, 12, match, (int(match.score["alliances"][0]["autoCellsInner"]) + int(match.score["alliances"][0]["autoCellsOuter"]) + int(match.score["alliances"][0]["autoCellsBottom"]))) # Blue
+        else:
+            csqp.updateCellValue(2, 12, match, "null") # Red
+            csqp.updateCellValue(3, 12, match, "null") # Blue
 
         csqp.updateCellValue(1, 13, match, "Other Points")
         csqp.updateCellFormatting(1, 13, match, self.bold_format)
-        csqp.updateCellValue(2, 13, match, (int(match.score["alliances"][1]["foulPoints"]) + int(match.score["alliances"][1]["adjustPoints"]) + int(match.score["alliances"][1]["controlPanelPoints"]) + int(match.score["alliances"][1]["endgamePoints"]))) # Red
-        csqp.updateCellValue(3, 13, match, (int(match.score["alliances"][0]["foulPoints"]) + int(match.score["alliances"][0]["adjustPoints"]) + int(match.score["alliances"][0]["controlPanelPoints"]) + int(match.score["alliances"][0]["endgamePoints"]))) # Blue
-
+        if not(match.score["alliances"][1]["foulPoints"] == "null"):
+            csqp.updateCellValue(2, 13, match, (int(match.score["alliances"][1]["foulPoints"]) + int(match.score["alliances"][1]["adjustPoints"]) + int(match.score["alliances"][1]["controlPanelPoints"]) + int(match.score["alliances"][1]["endgamePoints"]))) # Red
+            csqp.updateCellValue(3, 13, match, (int(match.score["alliances"][0]["foulPoints"]) + int(match.score["alliances"][0]["adjustPoints"]) + int(match.score["alliances"][0]["controlPanelPoints"]) + int(match.score["alliances"][0]["endgamePoints"]))) # Blue
+        else:
+            csqp.updateCellValue(2, 13, match, "null") # Red
+            csqp.updateCellValue(3, 13, match, "null") # Blue
 
         ## Teleop Score
         csqp.updateCellValue(4, 9, match, ("Inner " + u"\u25CF"))
@@ -276,8 +182,12 @@ class Sheets:
         csqp.updateCellValue(6, 11, match, match.score["alliances"][0]["teleopCellsBottom"]) # Blue
         
         csqp.updateCellValue(4, 12, match, "Teleop Total")
-        csqp.updateCellValue(5, 12, match, match.score["alliances"][1]["teleopPoints"]) # Red
-        csqp.updateCellValue(6, 12, match, match.score["alliances"][0]["teleopPoints"]) # Blue
+        if not(match.score["alliances"][1]["autoPoints"] == "null"):
+            csqp.updateCellValue(5, 12, match, (int(match.score["alliances"][1]["teleopCellsInner"]) + int(match.score["alliances"][1]["teleopCellsOuter"]) + int(match.score["alliances"][1]["teleopCellsBottom"]))) # Red
+            csqp.updateCellValue(6, 12, match, (int(match.score["alliances"][0]["teleopCellsInner"]) + int(match.score["alliances"][0]["teleopCellsOuter"]) + int(match.score["alliances"][0]["teleopCellsBottom"]))) # Blue
+        else:
+            csqp.updateCellValue(5, 12, match, "null") # Red
+            csqp.updateCellValue(6, 12, match, "null") # Blue
 
         csqp.updateCellValue(4, 13, match, "Score Total")
         csqp.updateCellRangeFormatting(4, 13, 6, 13, match, self.bold_format)
@@ -492,23 +402,9 @@ class Match:
         # Info about the Match Entry
         self.matchnum = self.schedule["matchNumber"]
         self.matchtype = self.schedule["tournamentLevel"]
-        self.matchtitle = ("%s Match #%s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1]))
+        self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
         self.o_x = 0 # X Location of the Entry
         self.o_y = 0 # Y Location of the Entry
-
-def main():
-    # Config and Data Retrieval Setup
-    config = Config()
-    data = MatchData(config, testing=True)
-    data.getScheduleData()
-    data.getScoreData()
-    data.getEventData(dprint=True)
-
-    # # Sheets object creation
-    sheets = Sheets(config, data)
-
-    # # Create objects for each match and create a template in the sheets
-    sheets.createMatchObjects()
-
-if __name__ == "__main__":
-    main()
+    def formatDate(self):
+        datevalues = self.schedule["startTime"].split("T")[0].split("-")
+        return ("(%s/%s/%s)" % (datevalues[1], datevalues[2], datevalues[0]))
