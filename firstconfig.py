@@ -13,14 +13,15 @@ class FirstConfig:
         # Opens the config file or creates it if it doesn't exist
         self.config = configparser.ConfigParser()
         if not os.path.exists('config.ini'):
-            self.config ['Event Config'] = {'eventid':'CMPMO'}
-            self.config ['FIRST API'] = {'Host':'', 'Username':'', 'Token':'frc-api.firstinspires.org'}
+            self.config ['Event Config'] = {'eventid':'CALN', 'season':'2019'}
+            self.config ['FIRST API'] = {'Host':'https://frc-api.firstinspires.org', 'Username':'', 'Token':''}
             self.config ['Google Sheets'] = {'sheetid': ''}
             with open ('config.ini', 'w') as configfile:
                 self.config.write(configfile)
         # Reads config file for values
         self.config.read('config.ini')
         self.eventid = self.config['Event Config']['eventid']
+        self.season = self.config['Event Config']['season']
         self.sheetid = self.config['Google Sheets']['sheetid']
         self.host = self.config['FIRST API']['Host']
         self.username = self.config['FIRST API']['Username']

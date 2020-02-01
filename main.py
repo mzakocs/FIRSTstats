@@ -41,8 +41,8 @@ class MatchData:
         self.testing = testing
     ### Data Retrieval Functions ###
     ## Gets Data from the FIRST API
-    # Testing parameter allows usage of a local JSON file for testing instead of the FIRST API
-    # DPrint parameter formats the dictionary into a readable format and prints it
+    # @param testing - allows usage of a local JSON file for testing instead of the FIRST API
+    # @param dprint - formats the json dictionary into a readable format and prints it
     def getScheduleData (self, dprint = False):
         if (self.testing == True):
             with open('testing/qualscheduledata.json') as json_file:
@@ -50,9 +50,9 @@ class MatchData:
             with open('testing/playoffscheduledata.json') as json_file:
                 self.playoffScheduleData = json.load(json_file)
         else:    
-            response = requests.get('%s/v2.0/2020/schedule/%s/qual/hybrid' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            response = requests.get('%s/v2.0/%s/schedule/%s/qual/hybrid' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
             self.qualScheduleData = response.json()["Schedule"]
-            response = requests.get('%s/v2.0/2020/schedule/%s/playoff/hybrid' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            response = requests.get('%s/v2.0/%s/schedule/%s/playoff/hybrid' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
             self.playoffScheduleData = response.json()["Schedule"]
         if dprint == True:
             print(json.dumps(self.qualScheduleData, sort_keys=True, indent=4))
@@ -65,9 +65,9 @@ class MatchData:
             with open('testing/playoffscoredata.json') as json_file:
                 self.playoffScoreData = json.load(json_file)
         else:
-            response = requests.get('%s/v2.0/2020/scores/%s/qual' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            response = requests.get('%s/v2.0/%s/scores/%s/qual' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
             self.qualScoreData = response.json()["MatchScores"]
-            response = requests.get('%s/v2.0/2020/scores/%s/playoff' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            response = requests.get('%s/v2.0/%s/scores/%s/playoff' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
             self.playoffScoreData = response.json()["MatchScores"]
         if dprint == True:
             print(json.dumps(self.qualScoreData, sort_keys=True, indent=4))
@@ -78,24 +78,44 @@ class MatchData:
             with open('testing/eventdata.json') as json_file:
                 self.eventData = json.load(json_file)
         else:    
-            response = requests.get('%s/v2.0/2020/events?eventCode=%s' % (self.config.host, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            response = requests.get('%s/v2.0/%s/events?eventCode=%s' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
             self.eventData = response.json()["Events"][0]
         if dprint == True:
             print(json.dumps(self.eventData, sort_keys=True, indent=4))
+    def getTeamData (self, dprint = False):
+        if (self.testing == True):
+            with open('testing/teamdata.json') as json_file:
+                self.eventData = json.load(json_file)
+        else:    
+            response = requests.get('%s/v2.0/%s/teams?eventCode=%s' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            if (response.json()["pageTotal"] > 1):
+                pageList = []
+                self.teamData = {"teams" : []}
+                for x in range(0, response.json()["pageTotal"]):
+                    tempresponse = requests.get('%s/v2.0/%s/teams?eventCode=%s?page=%s' % (self.config.host, self.config.season, self.config.eventid, x), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+                    pageList.insert(len(pageList), tempresponse.json()['teams'])
+                for x in pageList:
+                    self.teamData["teams"] += x
+            else:
+                self.teamData = response.json()["teams"]
+        if dprint == True:
+            print(json.dumps(self.teamData, sort_keys=True, indent=4))
 
 def main():
     # Config and Data Retrieval Setup
     config = firstconfig.FirstConfig()
-    data = MatchData(config, testing=True)
+    data = MatchData(config)
     data.getScheduleData()
     data.getScoreData()
-    data.getEventData(dprint=True)
+    data.getEventData()
+    data.getTeamData(dprint = True)
 
-    # # Sheets object creation
+    # Sheets object creation
     sheets = firstsheets.Sheets(config, data)
 
-    # # Create objects for each match and create a template in the sheets
+    # Create objects for each match and create a template in the sheets
     sheets.createMatchObjects()
+    sheets.createTeamObjects()
 
 if __name__ == "__main__":
     main()
