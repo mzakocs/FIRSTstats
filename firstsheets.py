@@ -337,7 +337,7 @@ class Sheets:
                 print ("Team Entry Found: %s" % tempTeam.name)
             except Exception as e:
                 if x == 0:
-                    tempTeam.o_y = 3 # If it's the very firtst match, set the origin below the title and column defs
+                    tempTeam.o_y = 5 # If it's the very firtst match, set the origin below the title and column defs
                     tempTeam.o_x = 8 # If it's the very fist match, set the origin to 8 to the right
                 else:
                     # Search fails, get the location of the last entry, set the origin below it, and create the entry
@@ -350,7 +350,7 @@ class Sheets:
         self.createTeamEntry()
 
     def createTeamEntry(self):
-        csqp = UCSQP(self, 8, 1, 11, (2 + len(self.teamDict)))
+        csqp = UCSQP(self, 8, 3, 11, (5 + len(self.teamDict)))
         limit = len(self.teamDict)
         # Title
         csqp.updateCellFormatting(1, 1, self.matchtitle_format)
@@ -468,16 +468,15 @@ class UCSQP:
 class Match:
     # A class that represents a match entry in the spreadsheet
     # One is created for each match in an event
-    def __init__(self, scheduledict, scoredict, fake = False):
+    def __init__(self, scheduledict, scoredict):
         # Class Imports
         self.schedule = scheduledict
         self.score = scoredict
 
         # Info about the Match Entry
-        if fake == False:
-            self.matchnum = self.schedule["matchNumber"]
-            self.matchtype = self.schedule["tournamentLevel"]
-            self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
+        self.matchnum = self.schedule["matchNumber"]
+        self.matchtype = self.schedule["tournamentLevel"]
+        self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
         self.o_x = 0 # X Location of the Entry
         self.o_y = 0 # Y Location of the Entry
     def formatDate(self):
@@ -530,13 +529,14 @@ class Team:
         d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
         s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
         s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
+
     def lostAgainst(self, oaamr, oaard):
         #@param oaamr - Opponent Alliance Average Mitch Rating
-        #@param oaard - Oponent Alliance Average Rating Deviation
+        #@param oaard - Opponent Alliance Average Rating Deviation
         s = 0
         E_term = self.expected_score(oaamr, oaard, inverse = True)
         d_squared = (self._q ** 2 * (self._g(self.ratingdeviation) ** 2 * E_term * (1 - E_term))) ** -1
-        s_new_mitchrating = oaamr + (self._q / (1 / ooard ** 2 + 1 / d_squared)) * self._g(self.ratingdeviation) * (s - E_term)
+        s_new_mitchrating = oaamr + (self._q / (1 / oaard ** 2 + 1 / d_squared)) * self._g(self.ratingdeviation) * (s - E_term)
 
 
 

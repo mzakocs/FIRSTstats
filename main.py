@@ -82,6 +82,7 @@ class MatchData:
             self.eventData = response.json()["Events"][0]
         if dprint == True:
             print(json.dumps(self.eventData, sort_keys=True, indent=4))
+
     def getTeamData (self, dprint = False):
         if (self.testing == True):
             with open('testing/teamdata.json') as json_file:
@@ -108,7 +109,7 @@ def main():
     data.getScheduleData()
     data.getScoreData()
     data.getEventData()
-    data.getTeamData(dprint = True)
+    data.getTeamData()
 
     # Sheets object creation
     sheets = firstsheets.Sheets(config, data)
