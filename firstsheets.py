@@ -20,7 +20,7 @@ class Sheets:
         # Google Drive OAuth2 Setup
         # gspread.readthedocs.io/en/latest/
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        credentials = ServiceAccountCredentials.from_json_keyfile_name('FIRST Python Stats-c64a29c90ec3.json', scope)
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.config.oauthjsonpath, scope)
         self.gc = gspread.authorize(credentials)
         self.sh = self.gc.open_by_key(self.config.sheetid)
 
@@ -55,34 +55,19 @@ class Sheets:
             self.ws = self.sh.worksheet(str(self.config.eventid))
         except Exception as e:
             self.ws = self.sh.add_worksheet(title=str(self.config.eventid), rows="3000", cols="30")
-            # Formatting the Cells
-            format_cell_range(self.ws, 'A1:A1', self.title_format)
-            format_cell_range(self.ws, 'A2:A2', self.venue_format)
-            # Adding the event info to the first 2 rows
-            self.ws.update_cell(1, 1, self.data.eventData["name"])
-            self.ws.update_cell(2, 1, self.data.eventData["venue"])
-            # Setting the cell size to 135 for all cells and changing the font
-            temprange = "A1:AD3000"
-            format_cell_range(self.ws, temprange, self.font_format)
-            body = {
-                "requests": [
-                    {
-                        "updateDimensionProperties": {
-                            "range": {
-                                "sheetId": self.ws._properties['sheetId'],
-                                "dimension": "COLUMNS",
-                                "startIndex": 0,
-                                "endIndex": 30
-                            },
-                            "properties": {
-                                "pixelSize": 136
-                            },
-                            "fields": "pixelSize"
-                        }
-                    }
-                ]
-            }
-            self.sh.batch_update(body)
+            # Creates a CSQP object to setup the worksheet
+            csqp = UCSQP(self, 1, 1, 2, 30)
+            # Creates formatting for the title and competition location
+            csqp.updateCellFormatting(1, 1, self.title_format)
+            csqp.updateCellFormatting(1, 2, self.venue_format)
+            # Adds the event info into the first 2 rows
+            csqp.updateCellValue(1, 1, self.data.eventData["name"])
+            csqp.updateCellValue(1, 2, self.data.eventData["venue"])
+            # Setting the cell size to 136 for all cells
+            csqp.updateCustomCellFormatting(1, 0 , 30, 0, "resizecolumn")
+            # Changing the font for all cells
+            csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
+            csqp.pushCellUpdate()
             print("Worksheet Created: " + str(e))
     
 
@@ -288,16 +273,13 @@ class Sheets:
 
         # Temporary Location Storage for creating origins
         templocationholdy = 0
-        templocationholdx = 0
 
         # Qualifier Match Object Creation
-        for x in range(0, len(self.data.qualScheduleData)):
+        for x in range(len(self.data.qualScheduleData)):
             tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
             if (x == 0):
                 tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth ro
-                tempMatch.o_x = 1
                 templocationholdy = 4
-                templocationholdx = 1
             else:
                 templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
                 tempMatch.o_y = templocationholdy
@@ -309,7 +291,7 @@ class Sheets:
             self.qualMatchList.insert(len(self.qualMatchList), tempMatch)
 
         # Playoff Match Object Creation
-        for x in range(0, len(self.data.playoffScheduleData)):
+        for x in range(len(self.data.playoffScheduleData)):
             tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
             templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
             tempMatch.o_y = templocationholdy 
@@ -322,12 +304,11 @@ class Sheets:
         self.teamDict = {}
         # Temporary location storage for origin creation
         templocationholdy = 0
-
-        for x in range(0, len(self.data.teamData)):
+        for x in range(len(self.data.teamData)):
             tempTeam = Team(self.data.teamData[x])
             if x == 0:
-                tempTeam.o_y = 3 # If it's the very firtst match, set the origin below the title and column defs
-                templocationholdy = 1
+                tempTeam.o_y = 3 # If it's the very first match, set the origin below the title and column defs
+                templocationholdy = 3
             else:
                 # Search fails, get the location of the last entry, set the origin below it, and create the entry
                 ### Not working, use in function to find them tho
@@ -338,16 +319,18 @@ class Sheets:
                 ## TODO: Clean this shit up
                 templocationholdy += 1
                 tempTeam.o_y = templocationholdy
-                print ("Team Entry Created: %s" % tempTeam.name)
+            print ("Team Entry Created: %s" % tempTeam.name)
             self.teamDict[str(tempTeam.number)] = tempTeam
-        print (self.teamDict)
 
     def createTeamEntry(self):
         csqp = UCSQP(self, 8, 4, 12, (5 + len(self.teamDict)))
-        limit = len(self.teamDict)
+        limit = len(self.teamDict) + 2 # +2 adds space for the title and column names
         # Title
         csqp.updateCellFormatting(1, 1, self.matchtitle_format)
         csqp.updateCellValue(1, 1, "Team List")
+        # Centered Values
+        csqp.updateCellRangeFormatting(1, 2, 5, 2, self.centered_format)
+        csqp.updateCellRangeFormatting(3, 3, 3, limit, self.centered_format)
         # Columns
         csqp.updateCellValue(1, 2, "Team Name")
         csqp.updateCellValue(2, 2, "Team Number")
@@ -373,13 +356,16 @@ class Sheets:
         csqp.updateCellRangeFormatting(3, 2, 3, limit, self.purple2_format)
         csqp.updateCellRangeFormatting(4, 2, 4, limit, self.purple1_format)
         csqp.updateCellRangeFormatting(5, 2, 5, limit, self.purple2_format)
-        # Inputting Teams
-        for key, value in self.teamDict.items():
-            # entry_x = csqp.convertX(value.o_x)
-            # entry_y = csqp.convertY(value.o_y)
-            csqp.updateCellValue(value.o_x, value.o_y, value.name)
-            csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
-            csqp.updateCellValue(value.o_x + 2, value.o_y, value.mitchrating)
+        ### TODO: FIX SORT FUNCTION
+        # Name Column Resize
+        csqp.updateCustomCellFormatting(1, 0, 2, 0, "resizecolumn", columnsize = 300)
+        # Sorts the dictionary by MitchRating
+        sortedTeamDict = sorted(self.teamDict.items(), key = lambda item: item[1].mitchrating)
+        # Inputting Team Data
+        for value in sortedTeamDict:
+            csqp.updateCellValue(value[1].o_x, value[1].o_y, value[1].name)
+            csqp.updateCellValue(value[1].o_x + 1, value[1].o_y, value[1].number)
+            csqp.updateCellValue(value[1].o_x + 2, value[1].o_y, value[1].mitchrating)
         # Push the USCQP query to the sheet    
         csqp.pushCellUpdate()
 
@@ -442,7 +428,7 @@ class UCSQP:
         # Puts the formatting options into a tuple and stores it in a list
         self.cell_formatting.insert(len(self.cell_formatting), (tempcellrange, formatsettings))
 
-    def updateCustomCellFormatting(self, x1, y1, x2, y2, requesttype):
+    def updateCustomCellFormatting(self, x1, y1, x2, y2, requesttype, columnsize = 136):
         # Formulates a custom google sheets request for merging cells
         if (requesttype == "merge"):
             temp_x1 = self.convertX(x1) - 1
@@ -459,6 +445,23 @@ class UCSQP:
                                     "startColumnIndex": temp_x1,
                                     "endColumnIndex": temp_x2
                                 } 
+                            }
+                        }
+            self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
+        elif (requesttype == "resizecolumn"):
+            columnsizeparam = columnsize
+            temprequest = {
+                            "updateDimensionProperties": {
+                                "range": {
+                                    "sheetId": self.ws.ws._properties['sheetId'],
+                                    "dimension": "COLUMNS",
+                                    "startIndex": self.convertX(x1) - 1,
+                                    "endIndex": self.convertX(x2) - 1
+                                },
+                                "properties": {
+                                    "pixelSize": columnsizeparam
+                                },
+                                "fields": "pixelSize"
                             }
                         }
             self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
@@ -504,8 +507,6 @@ class Match:
             # Adds the team to the list if it's Blue and Winning
             elif team["station"][0] == 'B' and self.schedule["scoreBlueFinal"] > self.schedule["scoreRedFinal"]:
                 teamList.insert(len(teamList), str(team["teamNumber"]))
-            else:
-                print("Something Went Wrong with the Winner Search, idk figure it out")
         return teamList
 
     def returnLosers(self):
@@ -517,8 +518,6 @@ class Match:
             # Adds the team to the list if it's Blue and Winning
             elif team["station"][0] == 'B' and self.schedule["scoreBlueFinal"] < self.schedule["scoreRedFinal"]:
                 teamList.insert(len(teamList), str(team["teamNumber"]))
-            else:
-                print("Something Went Wrong with the Winner Search, idk figure it out")
         return teamList
 
     def updateTeamScores(self, teamDict):
@@ -595,8 +594,8 @@ class Team:
         # Class Imports
         self.team = teamdict
         # Team Entry Origin
-        self.o_x = 0
-        self.o_y = 0
+        self.o_x = 1
+        self.o_y = 1
         # Team Information
         self.name = self.team["nameShort"]
         self.number = self.team["teamNumber"]
@@ -629,8 +628,8 @@ class Team:
         d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
         s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
         s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
-        self.mitchrating = s_new_mitchrating
-        self.ratingdeviation = s_new_ratingdeviation
+        self.mitchrating = round(s_new_mitchrating)
+        self.ratingdeviation = round(s_new_ratingdeviation)
 
     def lostAgainst(self, oaamr, oaard):
         #@param oaamr - Opponent Alliance Average Mitch Rating
@@ -640,8 +639,8 @@ class Team:
         d_squared = (self._q ** 2 * (self._g(self.ratingdeviation) ** 2 * E_term * (1 - E_term))) ** -1
         s_new_mitchrating = oaamr + (self._q / (1 / oaard ** 2 + 1 / d_squared)) * self._g(self.ratingdeviation) * (s - E_term)
         s_new_ratingdeviation = math.sqrt((1 / oaard ** 2 + 1 / d_squared) ** -1)
-        self.mitchrating = s_new_mitchrating
-        self.ratingdeviation = s_new_ratingdeviation
+        self.mitchrating = round(s_new_mitchrating)
+        self.ratingdeviation = round(s_new_ratingdeviation)
     
     def tiedAgainst(self, oaamr, oaard):
         #@param oaamr - Opponent Alliance Average Mitch Rating
@@ -651,8 +650,8 @@ class Team:
         d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
         s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
         s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
-        self.mitchrating = s_new_mitchrating
-        self.ratingdeviation = s_new_ratingdeviation
+        self.mitchrating = round(s_new_mitchrating)
+        self.ratingdeviation = round(s_new_ratingdeviation)
 
 
 
