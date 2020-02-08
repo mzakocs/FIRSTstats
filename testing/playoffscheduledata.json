@@ -1,0 +1,106 @@
+[
+    {
+        "actualStartTime": "2019-03-17T16:36:20.273", 
+        "description": "Final 1", 
+        "matchNumber": 19, 
+        "postResultTime": "2019-03-17T16:56:58.817", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1, 
+        "startTime": "2019-03-17T15:45:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 691
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 2584
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 7042
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 6803
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 1868
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 2659
+            }
+        ], 
+        "tournamentLevel": "Playoff"
+    }, 
+    {
+        "actualStartTime": "null", 
+        "description": "Final 2", 
+        "matchNumber": "null", 
+        "postResultTime": "null", 
+        "scoreBlueAuto": "null", 
+        "scoreBlueFinal": "null", 
+        "scoreBlueFoul": "null", 
+        "scoreRedAuto": "null", 
+        "scoreRedFinal": "null", 
+        "scoreRedFoul": "null",
+        "startTime": "2019-03-17T15:58:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 691
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 2584
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 7042
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 6803
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 1868
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 2659
+            }
+        ], 
+        "tournamentLevel": "Playoff"
+    }
+]

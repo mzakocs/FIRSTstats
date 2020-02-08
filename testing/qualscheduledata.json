@@ -1,0 +1,470 @@
+[
+    {
+        "actualStartTime": "2019-03-16T09:04:29.523", 
+        "description": "Qualification 1", 
+        "matchNumber": 1, 
+        "postResultTime": "2019-03-16T09:08:43.6", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:00:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 1159
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 7607
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 5805
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 207
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 6947
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 6803
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T09:14:14.21", 
+        "description": "Qualification 2", 
+        "matchNumber": 2, 
+        "postResultTime": "2019-03-16T09:17:29.263", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:08:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 691
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 5089
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 3925
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 5818
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 7595
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 2659
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T09:23:32.65", 
+        "description": "Qualification 3", 
+        "matchNumber": 3, 
+        "postResultTime": "2019-03-16T09:27:15.423", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:17:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 2584
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 2404
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 7042
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 6353
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 1661
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 2429
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T09:32:00.733", 
+        "description": "Qualification 4", 
+        "matchNumber": 4, 
+        "postResultTime": "2019-03-16T09:35:52.073", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:26:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 6060
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 3863
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 6833
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 4711
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 5453
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 696
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T09:40:59.363", 
+        "description": "Qualification 5", 
+        "matchNumber": 5, 
+        "postResultTime": "2019-03-16T09:45:49.143", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:35:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 4470
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 3882
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 5285
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 7645
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 3501
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 6560
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T10:16:25.06", 
+        "description": "Qualification 6", 
+        "matchNumber": 6, 
+        "postResultTime": "2019-03-16T10:19:49.073", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:44:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 599
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 1868
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 4
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 7327
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 3993
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 3512
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T10:25:54.423", 
+        "description": "Qualification 7", 
+        "matchNumber": 7, 
+        "postResultTime": "2019-03-16T10:29:58.667", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T09:53:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 6833
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 5818
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 5453
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 1159
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 207
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 1661
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T10:34:25.387", 
+        "description": "Qualification 8", 
+        "matchNumber": 8, 
+        "postResultTime": "2019-03-16T10:37:51.21", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T10:02:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 3501
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 691
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 4711
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 696
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 2659
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 2429
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }, 
+    {
+        "actualStartTime": "2019-03-16T10:41:46.43", 
+        "description": "Qualification 9", 
+        "matchNumber": 9, 
+        "postResultTime": "2019-03-16T10:45:27.07", 
+        "scoreBlueAuto": 22, 
+        "scoreBlueFinal": 101, 
+        "scoreBlueFoul": 1, 
+        "scoreRedAuto": 22, 
+        "scoreRedFinal": 101, 
+        "scoreRedFoul": 1,
+        "startTime": "2019-03-16T10:11:00", 
+        "teams": [
+            {
+                "dq": false, 
+                "station": "Red1", 
+                "surrogate": false, 
+                "teamNumber": 7607
+            }, 
+            {
+                "dq": false, 
+                "station": "Red2", 
+                "surrogate": false, 
+                "teamNumber": 7327
+            }, 
+            {
+                "dq": false, 
+                "station": "Red3", 
+                "surrogate": false, 
+                "teamNumber": 7595
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue1", 
+                "surrogate": false, 
+                "teamNumber": 3993
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue2", 
+                "surrogate": false, 
+                "teamNumber": 5805
+            }, 
+            {
+                "dq": false, 
+                "station": "Blue3", 
+                "surrogate": false, 
+                "teamNumber": 6353
+            }
+        ], 
+        "tournamentLevel": "Qualification"
+    }
+]

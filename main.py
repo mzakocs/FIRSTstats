@@ -86,7 +86,7 @@ class MatchData:
     def getTeamData (self, dprint = False):
         if (self.testing == True):
             with open('testing/teamdata.json') as json_file:
-                self.eventData = json.load(json_file)
+                self.teamData = json.load(json_file)
         else:    
             response = requests.get('%s/v2.0/%s/teams?eventCode=%s' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
             if (response.json()["pageTotal"] > 1):
@@ -105,7 +105,7 @@ class MatchData:
 def main():
     # Config and Data Retrieval Setup
     config = firstconfig.FirstConfig()
-    data = MatchData(config)
+    data = MatchData(config, testing = True)
     data.getScheduleData()
     data.getScoreData()
     data.getEventData()
@@ -115,8 +115,11 @@ def main():
     sheets = firstsheets.Sheets(config, data)
 
     # Create objects for each match and create a template in the sheets
-    sheets.createMatchObjects()
     sheets.createTeamObjects()
+    sheets.createMatchObjects()
+
+    sheets.createTeamEntry()
+    
 
 if __name__ == "__main__":
     main()

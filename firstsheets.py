@@ -88,7 +88,7 @@ class Sheets:
 
     def createMatchEntry(self, match):
         ### Compressed Sheets Query Protocol Setup ###
-        csqp = UCSQP(self, match.o_x, match.o_y, 6, 17)
+        csqp = UCSQP(self, match.o_x, match.o_y, match.o_x + 6, match.o_y + 17)
 
         ### Match Title ###
         csqp.updateCellValue(1, 1, match.matchtitle)
@@ -240,13 +240,6 @@ class Sheets:
         csqp.updateCellRangeFormatting(4, 8, 4, 13, self.box_right_format)
         csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_left_format)
         csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_right_format)
-
-        ### Scouting Notes Line Setup ###
-        csqp.updateCellValue(1, 14, "Scouting Notes")
-        csqp.updateCellFormatting(1, 14, self.category_title_format)
-        csqp.updateCustomCellFormatting(1, 14, 6, 14, "merge")
-        csqp.updateCustomCellFormatting(1, 15, 6, 17, "merge")
-        csqp.updateCellRangeFormatting(1, 14, 6, 14, self.box_bottom_format)
         
         ### Thicc Outline Setup ###
         csqp.updateCellRangeFormatting(1, 1, 6, 1, self.box_top_thick_format)
@@ -257,6 +250,13 @@ class Sheets:
         csqp.updateCellRangeFormatting(1, 17, 6, 17, self.box_bottom_thick_format)
         csqp.updateCellRangeFormatting(1, 8, 6, 8, self.box_top_thick_format)
         csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_top_thick_format)
+
+        ### Scouting Notes Line Setup ###
+        csqp.updateCellValue(1, 14, "Scouting Notes")
+        csqp.updateCellFormatting(1, 14, self.category_title_format)
+        csqp.updateCustomCellFormatting(1, 14, 6, 14, "merge")
+        csqp.updateCustomCellFormatting(1, 15, 6, 17, "merge")
+        csqp.updateCellRangeFormatting(1, 14, 6, 14, self.box_bottom_format)
 
         ### Entry Background Color ###
         ## Sets background color to green if the match has been played, grey otherwise
@@ -276,8 +276,8 @@ class Sheets:
 
     def convertLocal(self, x, y, match):
         # Calculate pos based on origin and converts to A1
-        temp_x = match.o_x + x
-        temp_y = match.o_y + y
+        temp_x = match.o_x + x - 1
+        temp_y = match.o_y + y - 1
         return gspread.utils.rowcol_to_a1(temp_y, temp_x)
         
     def createMatchObjects(self):
@@ -286,71 +286,64 @@ class Sheets:
         self.qualMatchList = [tempMatch] # Starts the list with a placeholder match so the match numbers match the index and aren't -1
         self.playoffMatchList = [tempMatch] # Starts the list with a placeholder match so the match numbers match the index -1
 
+        # Temporary Location Storage for creating origins
+        templocationholdy = 0
+        templocationholdx = 0
+
         # Qualifier Match Object Creation
         for x in range(0, len(self.data.qualScheduleData)):
             tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
-            try:
-                # Try to find the cell
-                cell = self.ws.find(tempMatch.matchtitle)
-                tempMatch.o_y = cell.row - 1
-                tempMatch.o_x = cell.col - 1
-                print ("Match Entry Found: %s" % tempMatch.matchtitle)
-            except Exception as e:
-                if (x == 0):
-                    tempMatch.o_y = 3 # If it's the very first match, set the origin to the third row
-                else:
-                    # Search fails, get the location of the last entry, set the origin below it, and create the entry
-                    locatorcell_list = self.ws.findall("Auto Score")
-                    tempMatch.o_y = int(locatorcell_list.pop().row) + 10 # 10 is how many rows needs to be added to the bottom of Auto score to have a spot for a new entry
-                # Creates the entry in sheets
-                self.createMatchEntry(tempMatch)
-                print ("Match Entry Created: %s" % e)
+            if (x == 0):
+                tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth ro
+                tempMatch.o_x = 1
+                templocationholdy = 4
+                templocationholdx = 1
+            else:
+                templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
+                tempMatch.o_y = templocationholdy
+            # Creates the entry in sheets
+            self.createMatchEntry(tempMatch)
+            # Updates the Mitch Score of the teams involved in the match
+            tempMatch.updateTeamScores(self.teamDict)
+            print ("Match Entry Created: %s" % tempMatch.matchtitle)
             self.qualMatchList.insert(len(self.qualMatchList), tempMatch)
 
         # Playoff Match Object Creation
         for x in range(0, len(self.data.playoffScheduleData)):
             tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
-            try:
-                # Try to find the cell
-                cell = self.ws.find (tempMatch.matchtitle)
-                tempMatch.o_y = cell.row - 1
-                tempMatch.o_x = cell.col - 1
-                print ("Match Entry Found: %s" % tempMatch.matchtitle)
-            except Exception as e:
-                # Search fails, get the location of the last entry, set the origin below it, and create the entry
-                locatorcell_list = self.ws.findall("Auto Score")
-                tempMatch.o_y = int(locatorcell_list.pop().row) + 10 # 10 is how many rows needs to be added to the bottom of Auto score to have a spot for a new entry
+            templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
+            tempMatch.o_y = templocationholdy 
             # Creates the entry's in sheets
-                self.createMatchEntry(tempMatch)
-                print ("Match Entry Created: %s" % e)
+            self.createMatchEntry(tempMatch)
+            print ("Match Entry Created: %s" % tempMatch.matchtitle)
             self.playoffMatchList.insert(len(self.playoffMatchList), tempMatch)
 
     def createTeamObjects(self):
         self.teamDict = {}
+        # Temporary location storage for origin creation
+        templocationholdy = 0
+
         for x in range(0, len(self.data.teamData)):
             tempTeam = Team(self.data.teamData[x])
-            try:
-                # Try to find the cell
-                cell = self.ws.find (tempTeam.name)
-                tempTeam.o_y = cell.row - 1
-                tempTeam.o_x = cell.col - 1
-                print ("Team Entry Found: %s" % tempTeam.name)
-            except Exception as e:
-                if x == 0:
-                    tempTeam.o_y = 5 # If it's the very firtst match, set the origin below the title and column defs
-                    tempTeam.o_x = 8 # If it's the very fist match, set the origin to 8 to the right
-                else:
-                    # Search fails, get the location of the last entry, set the origin below it, and create the entry
-                    locatorcell_list = self.ws.findall(self.data.teamData[x - 1].name)
-                    lastcell = locatorcell_list.pop()
-                    tempTeam.o_y = int(lastcell.row) + 1 # 1 below the last entry
-                    tempTeam.o_x = int(lastcell.col)
-                print ("Team Entry Created: %s" % e)
-            self.teamDict[tempTeam.number] = tempTeam
-        self.createTeamEntry()
+            if x == 0:
+                tempTeam.o_y = 3 # If it's the very firtst match, set the origin below the title and column defs
+                templocationholdy = 1
+            else:
+                # Search fails, get the location of the last entry, set the origin below it, and create the entry
+                ### Not working, use in function to find them tho
+                # locatorcell_list = self.ws.findall(self.data.teamData[x - 1]["nameShort"])
+                # lastcell = locatorcell_list.pop()
+                # tempTeam.o_y = self.teamDict[]
+                # tempTeam.o_x = int(lastcell.col)
+                ## TODO: Clean this shit up
+                templocationholdy += 1
+                tempTeam.o_y = templocationholdy
+                print ("Team Entry Created: %s" % tempTeam.name)
+            self.teamDict[str(tempTeam.number)] = tempTeam
+        print (self.teamDict)
 
     def createTeamEntry(self):
-        csqp = UCSQP(self, 8, 3, 11, (5 + len(self.teamDict)))
+        csqp = UCSQP(self, 8, 4, 12, (5 + len(self.teamDict)))
         limit = len(self.teamDict)
         # Title
         csqp.updateCellFormatting(1, 1, self.matchtitle_format)
@@ -358,30 +351,35 @@ class Sheets:
         # Columns
         csqp.updateCellValue(1, 2, "Team Name")
         csqp.updateCellValue(2, 2, "Team Number")
-        csqp.updateCellValue(2, 3, ("MitchRating" + u"\u2122"))
-        csqp.updateCellValue(2, 4, "Rank Title")
+        csqp.updateCellValue(3, 2, ("MitchRating" + u"\u2122"))
+        csqp.updateCellValue(4, 2, "Rank Title")
+        csqp.updateCellValue(5, 2, "Robot Type")
         # Boxes
-        csqp.updateCellRangeFormatting(1, 2, 4, 2, self.box_format)
+        csqp.updateCellRangeFormatting(1, 2, 5, 2, self.box_format)
         csqp.updateCellRangeFormatting(1, 3, 1, limit, self.box_right_format)
         csqp.updateCellRangeFormatting(2, 3, 2, limit, self.box_right_format)
         csqp.updateCellRangeFormatting(3, 3, 3, limit, self.box_right_format)
+        csqp.updateCellRangeFormatting(4, 3, 4, limit, self.box_right_format)
         # Thick Boxes
-        csqp.updateCellRangeFormatting(1, 1, 4, 1, self.box_top_thick_format)
-        csqp.updateCellRangeFormatting(1, 1, 4, 1, self.box_bottom_thick_format)
-        csqp.updateCellRangeFormatting(4, 1, 4, limit, self.box_right_thick_format)
+        csqp.updateCellRangeFormatting(1, 1, 5, 1, self.box_top_thick_format)
+        csqp.updateCellRangeFormatting(1, 1, 5, 1, self.box_bottom_thick_format)
+        csqp.updateCellRangeFormatting(5, 1, 5, limit, self.box_right_thick_format)
         csqp.updateCellRangeFormatting(1, 1, 1, limit, self.box_left_thick_format)
-        csqp.updateCellRangeFormatting(1, limit, 4, limit, self.box_bottom_thick_format)
+        csqp.updateCellRangeFormatting(1, limit, 5, limit, self.box_bottom_thick_format)
         # Colors
-        csqp.updateCellRangeFormatting(1, 1, 4, 1, self.purple_title_format)
+        csqp.updateCellRangeFormatting(1, 1, 5, 1, self.purple_title_format)
         csqp.updateCellRangeFormatting(1, 2, 1, limit, self.purple2_format)
         csqp.updateCellRangeFormatting(2, 2, 2, limit, self.purple1_format)
         csqp.updateCellRangeFormatting(3, 2, 3, limit, self.purple2_format)
         csqp.updateCellRangeFormatting(4, 2, 4, limit, self.purple1_format)
+        csqp.updateCellRangeFormatting(5, 2, 5, limit, self.purple2_format)
         # Inputting Teams
-        for team in self.teamDict:
-            csqp.updateCellValue(team.o_x, team.o_y, team.name)
-            csqp.updateCellValue(team.o_x + 1, team.o_y, team.number)
-            csqp.updateCellValue(team.o_x + 2, team.o_y, team.elo)
+        for key, value in self.teamDict.items():
+            # entry_x = csqp.convertX(value.o_x)
+            # entry_y = csqp.convertY(value.o_y)
+            csqp.updateCellValue(value.o_x, value.o_y, value.name)
+            csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
+            csqp.updateCellValue(value.o_x + 2, value.o_y, value.mitchrating)
         # Push the USCQP query to the sheet    
         csqp.pushCellUpdate()
 
@@ -403,6 +401,7 @@ class UCSQP:
 
         # Local Query List Setup
         self.cell_list = self.ws.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2))) # Grabs the whole section of cells
+        print('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2)))
         self.cell_formatting = []
         self.custom_requests = {"requests": []}
         
@@ -416,9 +415,18 @@ class UCSQP:
 
     def convertLocal(self, x, y):
         # Calculate pos based on origin and converts to A1
-        temp_x = self.o_x + x
-        temp_y = self.o_y + y
+        temp_x = self.o_x + x - 1
+        temp_y = self.o_y + y - 1
         return gspread.utils.rowcol_to_a1(temp_y, temp_x)
+
+    def convertX(self, x):
+        # Calculate x coordinate based on origin
+        temp_x = self.o_x + x - 1
+        return temp_x
+
+    def convertY(self, y):
+        temp_y = self.o_y + y - 1
+        return temp_y
 
     def updateCellFormatting(self, x, y, formatsettings):
         tempcell = self.convertLocal(x, y) # Converts the x, y coordinates to A1 format and local
@@ -437,10 +445,10 @@ class UCSQP:
     def updateCustomCellFormatting(self, x1, y1, x2, y2, requesttype):
         # Formulates a custom google sheets request for merging cells
         if (requesttype == "merge"):
-            temp_x1 = self.o_x + x1 - 1
-            temp_y1 = self.o_y + y1 - 1
-            temp_x2 = self.o_x + x2
-            temp_y2 = self.o_y + y2 
+            temp_x1 = self.convertX(x1) - 1
+            temp_y1 = self.convertY(y1) - 1
+            temp_x2 = self.convertX(x2)
+            temp_y2 = self.convertY(y2)
             temprequest = {
                             "mergeCells": {
                                 "mergeType": "MERGE_ALL",
@@ -459,11 +467,14 @@ class UCSQP:
 
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
-        format_cell_ranges(self.ws.ws, self.cell_formatting)
+        if not (len(self.cell_formatting) == 0):
+            format_cell_ranges(self.ws.ws, self.cell_formatting)
         # Pushes cell merge requests
-        self.ws.sh.batch_update(self.custom_requests)
+        if not (len(self.custom_requests["requests"]) == 0):
+            self.ws.sh.batch_update(self.custom_requests)
         # Pushes the cell value list to the google sheet
-        self.ws.ws.update_cells(self.cell_list)
+        if not (len(self.cell_list) == 0):
+            self.ws.ws.update_cells(self.cell_list)
 
 class Match:
     # A class that represents a match entry in the spreadsheet
@@ -477,15 +488,106 @@ class Match:
         self.matchnum = self.schedule["matchNumber"]
         self.matchtype = self.schedule["tournamentLevel"]
         self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
-        self.o_x = 0 # X Location of the Entry
-        self.o_y = 0 # Y Location of the Entry
+        self.o_x = 1 # X Location of the Entry
+        self.o_y = 1 # Y Location of the Entry
+
     def formatDate(self):
         datevalues = self.schedule["startTime"].split("T")[0].split("-")
         return ("(%s/%s/%s)" % (datevalues[1], datevalues[2], datevalues[0]))
 
+    def returnWinners(self):
+        teamList = []
+        for team in self.schedule["teams"]:
+            # Adds the team to the list if it's Red and Winning
+            if team["station"][0] == 'R' and self.schedule["scoreRedFinal"] > self.schedule["scoreBlueFinal"]:
+                teamList.insert(len(teamList), str(team["teamNumber"]))
+            # Adds the team to the list if it's Blue and Winning
+            elif team["station"][0] == 'B' and self.schedule["scoreBlueFinal"] > self.schedule["scoreRedFinal"]:
+                teamList.insert(len(teamList), str(team["teamNumber"]))
+            else:
+                print("Something Went Wrong with the Winner Search, idk figure it out")
+        return teamList
+
+    def returnLosers(self):
+        teamList = []
+        for team in self.schedule["teams"]:
+            # Adds the team to the list if it's Red and Winning
+            if team["station"][0] == 'R' and self.schedule["scoreRedFinal"] < self.schedule["scoreBlueFinal"]:
+                teamList.insert(len(teamList), str(team["teamNumber"]))
+            # Adds the team to the list if it's Blue and Winning
+            elif team["station"][0] == 'B' and self.schedule["scoreBlueFinal"] < self.schedule["scoreRedFinal"]:
+                teamList.insert(len(teamList), str(team["teamNumber"]))
+            else:
+                print("Something Went Wrong with the Winner Search, idk figure it out")
+        return teamList
+
+    def updateTeamScores(self, teamDict):
+        # Boolean to see if the match is a tie
+        tie = (self.schedule["scoreRedFinal"] == self.schedule["scoreBlueFinal"])
+        # If not a tie, do the regular winner/loser sorting
+        if not tie:
+            # Basic Variable Init
+            averagemr_winners = 0
+            averagerd_winners = 0
+            averagemr_losers = 0
+            averagerd_losers = 0
+            winners = self.returnWinners()
+            losers = self.returnLosers()
+            # Calculate the average MR and RD of the winners
+            for teamNumber in winners:
+                averagemr_winners += teamDict[teamNumber].mitchrating
+                averagerd_winners += teamDict[teamNumber].ratingdeviation
+            averagemr_winners /= len(winners)
+            averagerd_winners /= len(winners)
+            # Calculate the average MR and RD of the losers
+            for teamNumber in losers:
+                averagemr_losers += teamDict[teamNumber].mitchrating
+                averagerd_losers += teamDict[teamNumber].ratingdeviation
+            averagemr_losers /= len(losers)
+            averagerd_losers /= len(losers)
+            # Updates the scores of the winners
+            for teamNumber in winners:
+                teamDict[teamNumber].wonAgainst(averagemr_losers, averagerd_losers)
+            # Updates the scores of the losers
+            for teamNumber in losers:
+                teamDict[teamNumber].lostAgainst(averagemr_winners, averagerd_winners)
+        # If it is a tie, sort into 2 seperate teams and run tiedAgainst function on them
+        else:
+            averagemr_team1 = 0
+            averagerd_team1 = 0
+            averagemr_team2 = 0
+            averagerd_team2 = 0
+            team1List = []
+            team2List = []
+            for team in self.schedule["teams"]:
+                # Adds the team to the list if it's Red and Winning
+                if team["station"][0] == 'R':
+                    team1List.insert(len(team1List), str(team["teamNumber"]))
+                # Adds the team to the list if it's Blue and Winning
+                elif team["station"][0] == 'B':
+                    team2List.insert(len(team2List), str(team["teamNumber"]))
+            for teamNumber in team1List:
+                averagemr_team1 += teamDict[teamNumber].mitchrating
+                averagerd_team1 += teamDict[teamNumber].ratingdeviation
+            averagemr_team1 /= len(team1List)
+            averagerd_team1 /= len(team1List)
+            for teamNumber in team2List:
+                averagemr_team2 += teamDict[teamNumber].mitchrating
+                averagerd_team2 += teamDict[teamNumber].ratingdeviation
+            averagemr_team2 /= len(team1List)
+            averagerd_team2 /= len(team1List)
+            for teamNumber in team1List:
+                teamDict[teamNumber].tiedAgainst(averagemr_team2, averagerd_team2)
+            for teamNumber in team2List:
+                teamDict[teamNumber].tiedAgainst(averagemr_team1, averagerd_team1)
+
+
+
 class Team:
     # A class that represents an individual team in a match
     # One is created for each team in an event
+    # Uses the GLICKO Rating system to rank teams
+    # Rating deviation is almost like standard deviation, it shows how consistent the team is or if they are just getting carried
     _c = 1
     _q = 0.0057565
 
@@ -515,11 +617,9 @@ class Team:
         #@param oaard - Oponent Alliance Average Rating Deviation
         if inverse == True:
             g_term = self._g(math.sqrt(ooard ** 2 + self.ratingdeviation ** 2) * (ooamr - self.mitchrating) / 400)
-            E = 1 / (1 + 10 ** (-1 * g_term))
         else:
             g_term = self._g(math.sqrt(self.ratingdeviation ** 2 + ooard ** 2) * (self.mitchrating - ooamr) / 400)
-            E = 1 / (1 + 10 ** (-1 * g_term))
-        return E
+        return (1 / (1 + 10 ** (-1 * g_term)))
 
     def wonAgainst(self, oaamr, oaard):
         #@param oaamr - Opponent Alliance Average Mitch Rating
@@ -529,6 +629,8 @@ class Team:
         d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
         s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
         s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
+        self.mitchrating = s_new_mitchrating
+        self.ratingdeviation = s_new_ratingdeviation
 
     def lostAgainst(self, oaamr, oaard):
         #@param oaamr - Opponent Alliance Average Mitch Rating
@@ -537,6 +639,20 @@ class Team:
         E_term = self.expected_score(oaamr, oaard, inverse = True)
         d_squared = (self._q ** 2 * (self._g(self.ratingdeviation) ** 2 * E_term * (1 - E_term))) ** -1
         s_new_mitchrating = oaamr + (self._q / (1 / oaard ** 2 + 1 / d_squared)) * self._g(self.ratingdeviation) * (s - E_term)
+        s_new_ratingdeviation = math.sqrt((1 / oaard ** 2 + 1 / d_squared) ** -1)
+        self.mitchrating = s_new_mitchrating
+        self.ratingdeviation = s_new_ratingdeviation
+    
+    def tiedAgainst(self, oaamr, oaard):
+        #@param oaamr - Opponent Alliance Average Mitch Rating
+        #@param oaard - Opponent Alliance Average Rating Deviation
+        s = 0.5
+        E_term = self.expected_score(oaamr, oaard)
+        d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
+        s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
+        s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
+        self.mitchrating = s_new_mitchrating
+        self.ratingdeviation = s_new_ratingdeviation
 
 
 
