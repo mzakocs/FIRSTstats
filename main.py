@@ -30,6 +30,12 @@
  #                                                 Written By: Mitch Zakocs                                               #
 ############################################################################################################################
 
+# TODO: Get rest of filters setup on creatematchentries
+    # SUB TODO: Figure out a way to delete or edit all entries to show only the filtered ones 
+# TODO: Make a match checker and updater
+# TODO: Finish prediction for unplayed matches
+
+
 import requests
 import json
 import firstconfig
@@ -135,6 +141,7 @@ def main():
         # against that
         if configChanged == False:
             sheets.config = config
+            data.config = config
             if sheets.checkIfSheetExists() == False:
                 data.getScheduleData()
                 data.getScoreData()

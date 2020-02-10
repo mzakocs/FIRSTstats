@@ -114,9 +114,16 @@ class Sheets:
             templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
             tempMatch.o_y = templocationholdy 
             # Creates the entry's in sheets
+            if tempmatch.matchhappened:
+                tempMatch.updateTeamScores(self.teamDict)
             self.createMatchEntry(tempMatch)
             print ("Match Entry Created: %s" % tempMatch.matchtitle)
             self.matchList.insert(len(self.matchList), tempMatch)
+
+    def createMatchEntries(self):
+        filteredmatchlist = []
+        for match in filteredmatchlist:
+            self.createMatchEntry(match)
 
     def createMatchEntry(self, match):
         ### Compressed Sheets Query Protocol Setup ###
@@ -230,6 +237,36 @@ class Sheets:
         csqp.updateCellValue(5, 13, match.score["alliances"][1]["totalPoints"]) # Red
         csqp.updateCellValue(6, 13, match.score["alliances"][0]["totalPoints"]) # Blue
 
+#  csqp.updateCellValue(1, 3, "Team 1")
+#         csqp.updateCellValue(2, 3, match.schedule["teams"][0]["teamNumber"]) # Red
+#         csqp.updateCellValue(3, 3, match.schedule["teams"][3]["teamNumber"]) # Blue
+
+#         csqp.updateCellValue(1, 4, "Team 2")
+#         csqp.updateCellValue(2, 4, match.schedule["teams"][1]["teamNumber"]) # Red
+#         csqp.updateCellValue(3, 4, match.schedule["teams"][4]["teamNumber"]) # Blue
+
+#         csqp.updateCellValue(1, 5, "Team 3")
+#         csqp.updateCellValue(2, 5, match.schedule["teams"][2]["teamNumber"]) # Red
+#         csqp.updateCellValue(3, 5, match.schedule["teams"][5]["teamNumber"]) # Blue
+        ## Predictions Data
+        if match.matchhappened:
+            # Updates all the MitchRating and Score Predictions with the stored ones
+            # Red Team
+            csqp.updateCellValue(5, 3, match.redteam_mr[match.schedule["teams"][0]["teamNumber"]])
+            csqp.updateCellValue(5, 4, match.redteam_mr[match.schedule["teams"][1]["teamNumber"]])
+            csqp.updateCellValue(5, 5, match.redteam_mr[match.schedule["teams"][2]["teamNumber"]])
+            csqp.updateCellValue(5, 6, match.redteam_avmr)
+            csqp.updateCellValue(5, 7, match.redteam_avscr)
+            # Blue Team
+            csqp.updateCellValue(6, 3, match.blueteam_mr[match.schedule["teams"][3]["teamNumber"]])
+            csqp.updateCellValue(6, 4, match.blueteam_mr[match.schedule["teams"][4]["teamNumber"]])
+            csqp.updateCellValue(6, 5, match.blueteam_mr[match.schedule["teams"][5]["teamNumber"]])
+            csqp.updateCellValue(6, 6, match.blueteam_avmr)
+            csqp.updateCellValue(6, 7, match.blueteam_avscr)
+        else:
+            # Makes predictions based off previous match data
+            pass
+        
         ### Team Setup ###
         ## Red and Blue Colors
         csqp.updateCellRangeFormatting(2, 2, 2, 13, self.red_color_format)
@@ -292,7 +329,7 @@ class Sheets:
 
         ### Entry Background Color ###
         ## Sets background color to green if the match has been played, grey otherwise
-        if (match.schedule["postResultTime"] == "null"):
+        if match.matchhappened:
             csqp.updateCellRangeFormatting(1, 2, 1, 13, self.match_scheduled_format)
             csqp.updateCellRangeFormatting(1, 1, 6, 1, self.match_scheduled_format)
             csqp.updateCellRangeFormatting(4, 2, 4, 13, self.match_scheduled_format)
@@ -305,6 +342,8 @@ class Sheets:
         
         # Pushes all of the cells to google sheets
         csqp.pushCellUpdate()
+
+        time.sleep(3)
 
     def createTeamObjects(self):
         self.teamDict = {}
@@ -373,13 +412,19 @@ class Sheets:
         csqp.updateCustomCellFormatting(1, 0, 2, 0, "resizecolumn", columnsize = 300)
         csqp.updateCustomCellFormatting(7, 0, 8, 0, "resizecolumn", columnsize = 500)
         # Sorts the dictionary by MitchRating
-        import operator
         sortedTeamList = []
-        posCounter = 3
-        for team in (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True)):
-            team.o_y = posCounter
-            posCounter += 1
-            sortedTeamList.insert(len(sortedTeamList), team)
+        if (self.config.teamsort != "FALSE"):
+            import operator
+            posCounter = 3
+            for team in (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True)):
+                team.o_y = posCounter
+                posCounter += 1
+                sortedTeamList.insert(len(sortedTeamList), team)
+        else:
+            # If it's not enabled in config, don't sort the teams
+            for team in self.teamDict.values():
+                sortedTeamList.insert(len(sortedTeamList), team)
+
         # Inputting Team Data
         for value in sortedTeamList:
             csqp.updateCellValue(value.o_x, value.o_y, value.name)
@@ -518,103 +563,94 @@ class Match:
         # Info about the Match Entry
         self.matchnum = self.schedule["matchNumber"]
         self.matchtype = self.schedule["tournamentLevel"]
+        self.matchhappened = !(match.schedule["postResultTime"] == "null")
         self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
         self.o_x = 1 # X Location of the Entry
         self.o_y = 1 # Y Location of the Entry
+
+        # Prediction info for the Match Entry
+        self.redteam_mr = {}
+        self.blueteam_mr = {}
+        self.redteam_avmr = 0
+        self.redteam_avrd = 0
+        self.blueteam_avmr = 0
+        self.blueteam_avrd = 0
+        self.redteam_avscr = 0
+        self.blueteam_avscr = 0
 
     def formatDate(self):
         datevalues = self.schedule["startTime"].split("T")[0].split("-")
         return ("(%s/%s/%s)" % (datevalues[1], datevalues[2], datevalues[0]))
 
-    def returnWinners(self):
-        teamList = []
-        for team in self.schedule["teams"]:
-            # Adds the team to the list if it's Red and Winning
-            if team["station"][0] == 'R' and self.schedule["scoreRedFinal"] > self.schedule["scoreBlueFinal"]:
-                teamList.insert(len(teamList), str(team["teamNumber"]))
-            # Adds the team to the list if it's Blue and Winning
-            elif team["station"][0] == 'B' and self.schedule["scoreBlueFinal"] > self.schedule["scoreRedFinal"]:
-                teamList.insert(len(teamList), str(team["teamNumber"]))
-        return teamList
-
-    def returnLosers(self):
-        teamList = []
-        for team in self.schedule["teams"]:
-            # Adds the team to the list if it's Red and Winning
-            if team["station"][0] == 'R' and self.schedule["scoreRedFinal"] < self.schedule["scoreBlueFinal"]:
-                teamList.insert(len(teamList), str(team["teamNumber"]))
-            # Adds the team to the list if it's Blue and Winning
-            elif team["station"][0] == 'B' and self.schedule["scoreBlueFinal"] < self.schedule["scoreRedFinal"]:
-                teamList.insert(len(teamList), str(team["teamNumber"]))
-        return teamList
-
     def updateTeamScores(self, teamDict):
-        # Setup for score average system and ties
-        team1List = []
-        team2List = []
+        # Grabs the teams depending on color
+        redTeamList = []
+        blueTeamList = []
         for team in self.schedule["teams"]:
             # Adds the team to the list if it's Red and Winning
             if team["station"][0] == 'R':
-                team1List.insert(len(team1List), str(team["teamNumber"]))
+                redTeamList.insert(len(redTeamList), str(team["teamNumber"]))
             # Adds the team to the list if it's Blue and Winning
             elif team["station"][0] == 'B':
-                team2List.insert(len(team2List), str(team["teamNumber"]))
-        # Boolean to see if the match is a tie
-        tie = (self.schedule["scoreRedFinal"] == self.schedule["scoreBlueFinal"])
-        # If not a tie, do the regular winner/loser sorting
-        if not tie:
-            # Basic Variable Init
-            averagemr_winners = 0
-            averagerd_winners = 0
-            averagemr_losers = 0
-            averagerd_losers = 0
-            winners = self.returnWinners()
-            losers = self.returnLosers()
-            # Calculate the average MR and RD of the winners
-            for teamNumber in winners:
-                averagemr_winners += teamDict[teamNumber].mitchrating
-                averagerd_winners += teamDict[teamNumber].ratingdeviation
-            averagemr_winners /= len(winners)
-            averagerd_winners /= len(winners)
-            # Calculate the average MR and RD of the losers
-            for teamNumber in losers:
-                averagemr_losers += teamDict[teamNumber].mitchrating
-                averagerd_losers += teamDict[teamNumber].ratingdeviation
-            averagemr_losers /= len(losers)
-            averagerd_losers /= len(losers)
-            # Updates the scores of the winners
-            for teamNumber in winners:
-                teamDict[teamNumber].wonAgainst(averagemr_losers, averagerd_losers)
-            # Updates the scores of the losers
-            for teamNumber in losers:
-                teamDict[teamNumber].lostAgainst(averagemr_winners, averagerd_winners)
-        # If it is a tie, sort into 2 seperate teams and run tiedAgainst function on them
+                blueTeamList.insert(len(blueTeamList), str(team["teamNumber"]))
+
+        # Figures out which team won or if it was a tie
+        teamwinner = ""
+        if (self.schedule["scoreRedFinal"] > self.schedule["scoreBlueFinal"]):
+            teamwinner = "R"
+        elif (self.schedule["scoreRedFinal"] < self.schedule["scoreBlueFinal"]):
+            teamwinner = "B"
         else:
-            averagemr_team1 = 0
-            averagerd_team1 = 0
-            averagemr_team2 = 0
-            averagerd_team2 = 0
-            for teamNumber in team1List:
-                averagemr_team1 += teamDict[teamNumber].mitchrating
-                averagerd_team1 += teamDict[teamNumber].ratingdeviation
-            averagemr_team1 /= len(team1List)
-            averagerd_team1 /= len(team1List)
-            for teamNumber in team2List:
-                averagemr_team2 += teamDict[teamNumber].mitchrating
-                averagerd_team2 += teamDict[teamNumber].ratingdeviation
-            averagemr_team2 /= len(team1List)
-            averagerd_team2 /= len(team1List)
-            for teamNumber in team1List:
-                teamDict[teamNumber].tiedAgainst(averagemr_team2, averagerd_team2)
-            for teamNumber in team2List:
-                teamDict[teamNumber].tiedAgainst(averagemr_team1, averagerd_team1)
+            teamwinner = "T" # If neither of those conditions are met, the match is a tie or something else went wrong
+
+        # Calculates the average MR and RD of the Red Team
+        for teamNumber in redTeamList:
+            self.redteam_avmr += teamDict[teamNumber].mitchrating
+            self.redteam_avrd += teamDict[teamNumber].ratingdeviation
+        self.redteam_avmr /= len(redTeamList)
+        self.redteam_avrd /= len(redTeamList)
+
+        # Calculates the average MR and RD of the Blue Team
+        for teamNumber in blueTeamList:
+            self.blueteam_avmr += teamDict[teamNumber].mitchrating
+            self.blueteam_avrd += teamDict[teamNumber].ratingdeviation
+        self.blueteam_avmr /= len(blueTeamList)
+        self.blueteam_avrd /= len(blueTeamList)
+
+        # Updates each individual team and the match entry
+        if teamwinner == "R":
+            for teamNumber in redTeamList:
+                teamDict[teamNumber].wonAgainst(self.blueteam_avmr, self.blueteam_avrd)
+                self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
+            for teamNumber in blueTeamList:
+                teamDict[teamNumber].lostAgainst(self.redteam_avmr, self.redteam_avrd)
+                self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
+        if teamwinner == "B":
+            for teamNumber in redTeamList:
+                teamDict[teamNumber].lostAgainst(self.blueteam_avmr, self.blueteam_avrd)
+                self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
+            for teamNumber in blueTeamList:
+                teamDict[teamNumber].wonAgainst(self.redteam_avmr, self.redteam_avrd)
+                self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
+        if teamwinner == "T":
+            for teamNumber in redTeamList:
+                teamDict[teamNumber].tiedAgainst(self.blueteam_avmr, self.blueteam_avrd)
+                self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
+            for teamNumber in blueTeamList:
+                teamDict[teamNumber].tiedAgainst(self.redteam_avmr, self.redteam_avrd)
+                self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
+
         # Updating score averages
-        for team in team1List:
+        for team in redTeamList:
             teamDict[team].totalScore += self.schedule["scoreRedFinal"]
             teamDict[team].matchesPlayed += 1
-        for team in team2List:
+            self.redteam_avscr += (teamDict[team].totalScore / teamDict[team].matchesPlayed)
+        for team in blueTeamList:
             teamDict[team].totalScore += self.schedule["scoreBlueFinal"]
             teamDict[team].matchesPlayed += 1
+            self.blueteam_avscr += (teamDict[team].totalScore / teamDict[team].matchesPlayed)
+        self.redteam_avscr /= len(redTeamList)
+        self.blueteam_avscr /= len(blueTeamList)
 
 
 class Team:
