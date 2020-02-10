@@ -69,7 +69,45 @@ class Sheets:
             csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
             csqp.pushCellUpdate()
             print("Worksheet Created: " + str(e))
-    
+
+    def convertLocal(self, x, y, match):
+        # Calculate pos based on origin and converts to A1
+        temp_x = match.o_x + x - 1
+        temp_y = match.o_y + y - 1
+        return gspread.utils.rowcol_to_a1(temp_y, temp_x)
+        
+    def createMatchObjects(self):
+        # Creates lists to store the qualifier and playoff matches
+        self.matchList = []
+
+        # Temporary Location Storage for creating origins
+        templocationholdy = 0
+
+        # Qualifier Match Object Creation
+        for x in range(len(self.data.qualScheduleData)):
+            tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
+            if (x == 0):
+                tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth row
+                templocationholdy = 4
+            else:
+                templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
+                tempMatch.o_y = templocationholdy
+            # Creates the entry in sheets
+            self.createMatchEntry(tempMatch)
+            # Updates the Mitch Score of the teams involved in the match
+            tempMatch.updateTeamScores(self.teamDict)
+            print ("Match Entry Created: ", tempMatch.matchtitle)
+            self.matchList.insert(len(self.matchList), tempMatch)
+
+        # Playoff Match Object Creation
+        for x in range(len(self.data.playoffScheduleData)):
+            tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
+            templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
+            tempMatch.o_y = templocationholdy 
+            # Creates the entry's in sheets
+            self.createMatchEntry(tempMatch)
+            print ("Match Entry Created: %s" % tempMatch.matchtitle)
+            self.matchList.insert(len(self.matchList), tempMatch)
 
     def createMatchEntry(self, match):
         ### Compressed Sheets Query Protocol Setup ###
@@ -258,47 +296,6 @@ class Sheets:
         
         # Pushes all of the cells to google sheets
         csqp.pushCellUpdate()
-
-    def convertLocal(self, x, y, match):
-        # Calculate pos based on origin and converts to A1
-        temp_x = match.o_x + x - 1
-        temp_y = match.o_y + y - 1
-        return gspread.utils.rowcol_to_a1(temp_y, temp_x)
-        
-    def createMatchObjects(self):
-        # Creates lists to store the qualifier and playoff matches
-        tempMatch = Match(self.data.qualScheduleData[0], self.data.qualScoreData[0])
-        self.qualMatchList = [tempMatch] # Starts the list with a placeholder match so the match numbers match the index and aren't -1
-        self.playoffMatchList = [tempMatch] # Starts the list with a placeholder match so the match numbers match the index -1
-
-        # Temporary Location Storage for creating origins
-        templocationholdy = 0
-
-        # Qualifier Match Object Creation
-        for x in range(len(self.data.qualScheduleData)):
-            tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
-            if (x == 0):
-                tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth ro
-                templocationholdy = 4
-            else:
-                templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
-                tempMatch.o_y = templocationholdy
-            # Creates the entry in sheets
-            self.createMatchEntry(tempMatch)
-            # Updates the Mitch Score of the teams involved in the match
-            tempMatch.updateTeamScores(self.teamDict)
-            print ("Match Entry Created: %s" % tempMatch.matchtitle)
-            self.qualMatchList.insert(len(self.qualMatchList), tempMatch)
-
-        # Playoff Match Object Creation
-        for x in range(len(self.data.playoffScheduleData)):
-            tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
-            templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
-            tempMatch.o_y = templocationholdy 
-            # Creates the entry's in sheets
-            self.createMatchEntry(tempMatch)
-            print ("Match Entry Created: %s" % tempMatch.matchtitle)
-            self.playoffMatchList.insert(len(self.playoffMatchList), tempMatch)
 
     def createTeamObjects(self):
         self.teamDict = {}
