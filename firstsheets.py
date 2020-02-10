@@ -49,14 +49,23 @@ class Sheets:
         self.purple_title_format = CellFormat(backgroundColor = Color(0.6, 0.2, 0.4))
         self.purple1_format = CellFormat(backgroundColor = Color(0.78, 0.33, 0.55))
         self.purple2_format = CellFormat(backgroundColor = Color(0.85, 0.55, 0.71))
+        
+        # Sheets Config Setup
+        try:
+            self.config_ws = self.sh.worksheet("Home")
+        except Exception as e:
+            print (e + " sheet not found! Please create for Sheets Config Functionality")
+            pass
+        self.checkIfSheetExists()
 
-        # Checks to see if the sheet exists, if not it gets created
+    def checkIfSheetExists(self):
         try:
             self.ws = self.sh.worksheet(str(self.config.eventid))
+            return True
         except Exception as e:
             self.ws = self.sh.add_worksheet(title=str(self.config.eventid), rows="3000", cols="30")
             # Creates a CSQP object to setup the worksheet
-            csqp = UCSQP(self, 1, 1, 2, 30)
+            csqp = UCSQP(self.ws, self.sh, 1, 1, 2, 30)
             # Creates formatting for the title and competition location
             csqp.updateCellFormatting(1, 1, self.title_format)
             csqp.updateCellFormatting(1, 2, self.venue_format)
@@ -111,7 +120,7 @@ class Sheets:
 
     def createMatchEntry(self, match):
         ### Compressed Sheets Query Protocol Setup ###
-        csqp = UCSQP(self, match.o_x, match.o_y, match.o_x + 6, match.o_y + 17)
+        csqp = UCSQP(self.ws, self.sh, match.o_x, match.o_y, match.o_x + 6, match.o_y + 17)
 
         ### Match Title ###
         csqp.updateCellValue(1, 1, match.matchtitle)
@@ -320,13 +329,13 @@ class Sheets:
             self.teamDict[str(tempTeam.number)] = tempTeam
 
     def createTeamEntry(self):
-        csqp = UCSQP(self, 8, 4, 12, (5 + len(self.teamDict)))
+        csqp = UCSQP(self.ws, self.sh, 8, 4, 14, (5 + len(self.teamDict)))
         limit = len(self.teamDict) + 2 # +2 adds space for the title and column names
         # Title
         csqp.updateCellFormatting(1, 1, self.matchtitle_format)
         csqp.updateCellValue(1, 1, "Team List")
         # Centered Values
-        csqp.updateCellRangeFormatting(1, 2, 5, 2, self.centered_format)
+        csqp.updateCellRangeFormatting(1, 2, 7, 2, self.centered_format)
         csqp.updateCellRangeFormatting(3, 3, 3, limit, self.centered_format)
         # Columns
         csqp.updateCellValue(1, 2, "Team Name")
@@ -334,37 +343,52 @@ class Sheets:
         csqp.updateCellValue(3, 2, ("MitchRating" + u"\u2122"))
         csqp.updateCellValue(4, 2, "Rank Title")
         csqp.updateCellValue(5, 2, "Robot Type")
+        csqp.updateCellValue(6, 2, "Robot Weight")
+        csqp.updateCellValue(7, 2, "Notes")
         # Boxes
-        csqp.updateCellRangeFormatting(1, 2, 5, 2, self.box_format)
+        csqp.updateCellRangeFormatting(1, 2, 7, 2, self.box_format)
         csqp.updateCellRangeFormatting(1, 3, 1, limit, self.box_right_format)
         csqp.updateCellRangeFormatting(2, 3, 2, limit, self.box_right_format)
         csqp.updateCellRangeFormatting(3, 3, 3, limit, self.box_right_format)
         csqp.updateCellRangeFormatting(4, 3, 4, limit, self.box_right_format)
+        csqp.updateCellRangeFormatting(5, 3, 5, limit, self.box_right_format)
+        csqp.updateCellRangeFormatting(6, 3, 6, limit, self.box_right_format)
         # Thick Boxes
-        csqp.updateCellRangeFormatting(1, 1, 5, 1, self.box_top_thick_format)
-        csqp.updateCellRangeFormatting(1, 1, 5, 1, self.box_bottom_thick_format)
-        csqp.updateCellRangeFormatting(5, 1, 5, limit, self.box_right_thick_format)
+        csqp.updateCellRangeFormatting(1, 1, 7, 1, self.box_top_thick_format)
+        csqp.updateCellRangeFormatting(1, 1, 7, 1, self.box_bottom_thick_format)
+        csqp.updateCellRangeFormatting(7, 1, 7, limit, self.box_right_thick_format)
         csqp.updateCellRangeFormatting(1, 1, 1, limit, self.box_left_thick_format)
-        csqp.updateCellRangeFormatting(1, limit, 5, limit, self.box_bottom_thick_format)
+        csqp.updateCellRangeFormatting(1, limit, 7, limit, self.box_bottom_thick_format)
         # Colors
-        csqp.updateCellRangeFormatting(1, 1, 5, 1, self.purple_title_format)
+        csqp.updateCellRangeFormatting(1, 1, 7, 1, self.purple_title_format)
         csqp.updateCellRangeFormatting(1, 2, 1, limit, self.purple2_format)
         csqp.updateCellRangeFormatting(2, 2, 2, limit, self.purple1_format)
         csqp.updateCellRangeFormatting(3, 2, 3, limit, self.purple2_format)
         csqp.updateCellRangeFormatting(4, 2, 4, limit, self.purple1_format)
         csqp.updateCellRangeFormatting(5, 2, 5, limit, self.purple2_format)
+        csqp.updateCellRangeFormatting(6, 2, 6, limit, self.purple1_format)
+        csqp.updateCellRangeFormatting(7, 2, 7, limit, self.purple2_format)
         ### TODO: FIX SORT FUNCTION
         # Name Column Resize
         csqp.updateCustomCellFormatting(1, 0, 2, 0, "resizecolumn", columnsize = 300)
+        csqp.updateCustomCellFormatting(7, 0, 8, 0, "resizecolumn", columnsize = 500)
         # Sorts the dictionary by MitchRating
-        sortedTeamDict = sorted(self.teamDict.items(), key = lambda item: item[1].mitchrating)
+        import operator
+        sortedTeamList = []
+        posCounter = 3
+        for team in (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True)):
+            team.o_y = posCounter
+            posCounter += 1
+            sortedTeamList.insert(len(sortedTeamList), team)
         # Inputting Team Data
-        for value in sortedTeamDict:
-            csqp.updateCellValue(value[1].o_x, value[1].o_y, value[1].name)
-            csqp.updateCellValue(value[1].o_x + 1, value[1].o_y, value[1].number)
-            csqp.updateCellValue(value[1].o_x + 2, value[1].o_y, value[1].mitchrating)
+        for value in sortedTeamList:
+            csqp.updateCellValue(value.o_x, value.o_y, value.name)
+            csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
+            csqp.updateCellValue(value.o_x + 2, value.o_y, value.mitchrating)
+            csqp.updateCellValue(value.o_x + 3, value.o_y, value.getRankTitle())
         # Push the USCQP query to the sheet    
         csqp.pushCellUpdate()
+        print ("Sheets Team Entry Updated!")
 
 
 class UCSQP:
@@ -374,17 +398,17 @@ class UCSQP:
     #   This system grabs the cells we need to edit, edits them locally in python,
     #   and then pushes all of the cells back to google sheets in 1 request.
     #   This is much more efficient than using 1 request to edit one cell.
-    def __init__(self, ws, r_x1, r_y1, r_x2, r_y2):
+    def __init__(self, ws, sh, r_x1, r_y1, r_x2, r_y2):
         # @param ws - imports the worksheet class to be able to write to the worksheet
         # @param r - range for the section of cells to grab
         # Class Imports
         self.ws = ws
+        self.sh = sh
         self.o_x = r_x1
         self.o_y = r_y1
 
         # Local Query List Setup
         self.cell_list = self.ws.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2))) # Grabs the whole section of cells
-        print('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2)))
         self.cell_formatting = []
         self.custom_requests = {"requests": []}
         
@@ -465,16 +489,23 @@ class UCSQP:
         else:
             print("Custom Request Type Not Found!")
 
+    def readCell(self, x, y):
+        tempcell = self.convertLocal(x, y)
+        # Finds the cell in the cell list and returns the value
+        for cell in self.cell_list:
+            if (cell.row == a1_to_rowcol(tempcell)[0] and cell.col == a1_to_rowcol(tempcell)[1]):
+                return cell.value
+
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
         if not (len(self.cell_formatting) == 0):
-            format_cell_ranges(self.ws.ws, self.cell_formatting)
+            format_cell_ranges(self.ws, self.cell_formatting)
         # Pushes cell merge requests
         if not (len(self.custom_requests["requests"]) == 0):
-            self.ws.sh.batch_update(self.custom_requests)
+            self.sh.batch_update(self.custom_requests)
         # Pushes the cell value list to the google sheet
         if not (len(self.cell_list) == 0):
-            self.ws.ws.update_cells(self.cell_list)
+            self.ws.update_cells(self.cell_list)
 
 class Match:
     # A class that represents a match entry in the spreadsheet
@@ -518,6 +549,16 @@ class Match:
         return teamList
 
     def updateTeamScores(self, teamDict):
+        # Setup for score average system and ties
+        team1List = []
+        team2List = []
+        for team in self.schedule["teams"]:
+            # Adds the team to the list if it's Red and Winning
+            if team["station"][0] == 'R':
+                team1List.insert(len(team1List), str(team["teamNumber"]))
+            # Adds the team to the list if it's Blue and Winning
+            elif team["station"][0] == 'B':
+                team2List.insert(len(team2List), str(team["teamNumber"]))
         # Boolean to see if the match is a tie
         tie = (self.schedule["scoreRedFinal"] == self.schedule["scoreBlueFinal"])
         # If not a tie, do the regular winner/loser sorting
@@ -553,15 +594,6 @@ class Match:
             averagerd_team1 = 0
             averagemr_team2 = 0
             averagerd_team2 = 0
-            team1List = []
-            team2List = []
-            for team in self.schedule["teams"]:
-                # Adds the team to the list if it's Red and Winning
-                if team["station"][0] == 'R':
-                    team1List.insert(len(team1List), str(team["teamNumber"]))
-                # Adds the team to the list if it's Blue and Winning
-                elif team["station"][0] == 'B':
-                    team2List.insert(len(team2List), str(team["teamNumber"]))
             for teamNumber in team1List:
                 averagemr_team1 += teamDict[teamNumber].mitchrating
                 averagerd_team1 += teamDict[teamNumber].ratingdeviation
@@ -576,13 +608,20 @@ class Match:
                 teamDict[teamNumber].tiedAgainst(averagemr_team2, averagerd_team2)
             for teamNumber in team2List:
                 teamDict[teamNumber].tiedAgainst(averagemr_team1, averagerd_team1)
-
+        # Updating score averages
+        for team in team1List:
+            teamDict[team].totalScore += self.schedule["scoreRedFinal"]
+            teamDict[team].matchesPlayed += 1
+        for team in team2List:
+            teamDict[team].totalScore += self.schedule["scoreBlueFinal"]
+            teamDict[team].matchesPlayed += 1
 
 
 class Team:
     # A class that represents an individual team in a match
     # One is created for each team in an event
-    # Uses the GLICKO Rating system to rank teams
+    ## Uses an implementation of the GLICKO Rating system to rank teams
+    # http://www.glicko.net/glicko.html
     # Rating deviation is almost like standard deviation, it shows how consistent the team is or if they are just getting carried
     _c = 1
     _q = 0.0057565
@@ -599,6 +638,8 @@ class Team:
         # Predictions Data
         self.mitchrating = 1500
         self.ratingdeviation = 350
+        self.totalScore = 0
+        self.matchesPlayed = 0
 
     @property
     def tranformed_rd(self):
@@ -649,6 +690,10 @@ class Team:
         s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
         self.mitchrating = round(s_new_mitchrating)
         self.ratingdeviation = round(s_new_ratingdeviation)
+    
+    def getRankTitle(self):
+        pass
+
 
 
 

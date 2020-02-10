@@ -34,6 +34,7 @@ import requests
 import json
 import firstconfig
 import firstsheets
+import time
 
 class MatchData:
     def __init__(self, config, testing = False):
@@ -118,8 +119,41 @@ def main():
     # Create objects for each match and create a template in the sheets
     sheets.createTeamObjects()
     sheets.createMatchObjects()
-
+    sheets.createMatchEntries()
     sheets.createTeamEntry()
+
+    # Main Execution Loop
+    starttime = time.time()
+    print("Service started at: ", starttime)
+    while True:
+        csqp = firstsheets.UCSQP(sheets.config_ws, sheets.sh, 4, 6, 5, 13)
+        configChanged = config.checkSheetsConfig(sheets.config_ws, csqp)
+        # Add another condition to the if statement that checks
+        # if the data from the API has been changed and if it has
+        # update or add the entries
+        # Either check the sheet data or store the last used JSON and check it
+        # against that
+        if configChanged == False:
+            sheets.config = config
+            if sheets.checkIfSheetExists() == False:
+                data.getScheduleData()
+                data.getScoreData()
+                data.getEventData()
+                data.getTeamData()
+                sheets.data = data
+                sheets.createTeamObjects()
+                sheets.createMatchObjects()
+            if configChanged == "Filter":
+                # Write a function to delete all entries in the sheet
+                pass
+            if dataChanged == True:
+                # Write a function to see if the data in the sheet has changed
+                pass
+            sheets.createTeamEntry()
+            sheets.createMatchEntries()
+        # Sleeps for 60 seconds on the clock before checking again
+        time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+
     
 
 if __name__ == "__main__":
