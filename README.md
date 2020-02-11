@@ -39,6 +39,13 @@ Distributed under the MIT License. See ``LICENSE`` for more information.
 
 [https://github.com/zakocsm/](https://github.com/zakocsm/)
 
+## Required Libraries
+
+All 3 are related to Google Sheets Integration:
+> pip3 install oauth2client
+> pip3 install gspread
+> pip3 install gspread_formatting
+
 ## Contributing
 
 1. Fork it (<https://github.com/zakocsm/FirstStats2020>)
