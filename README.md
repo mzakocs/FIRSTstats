@@ -6,7 +6,7 @@ I made this project to automate a great portion of the scouting process by pulli
 The project is also completely integrated with Google Sheets instead of a spreadsheet, making it much easier to view data, edit notes and configure the app from any web browser.  
 This app is meant to be run as a service on a server or a computer and ran constantly, but can be modified as a one-time-run application if you remove the main execution loop and just call the functions once.
 
-## Pictures
+## Images
 
 ![Home Page](header.png)
 
@@ -33,11 +33,12 @@ This app is meant to be run as a service on a server or a computer and ran const
 
 ## Meta
 
-Mitch Zakocs – mitchell.zakocs@pridetronics.com
+Mitch Zakocs – mitchell.zakocs@pridetronics.com  
+
+[https://github.com/zakocsm/](https://github.com/zakocsm/)  
 
 Distributed under the MIT License. See ``LICENSE`` for more information.
 
-[https://github.com/zakocsm/](https://github.com/zakocsm/)
 
 ## Required Libraries
 
