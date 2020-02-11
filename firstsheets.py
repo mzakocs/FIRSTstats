@@ -7,9 +7,9 @@
 # pip gspread, gspread_formatting, pyopenssl and oauth2client for google sheets functionality
 import time
 import gspread
-import math
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
+from firstpredictions import *
 
 class Sheets:
     def __init__(self, config, data):
@@ -114,14 +114,57 @@ class Sheets:
             templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
             tempMatch.o_y = templocationholdy 
             # Creates the entry's in sheets
-            if tempmatch.matchhappened:
+            if tempMatch.matchhappened:
                 tempMatch.updateTeamScores(self.teamDict)
             self.createMatchEntry(tempMatch)
             print ("Match Entry Created: %s" % tempMatch.matchtitle)
             self.matchList.insert(len(self.matchList), tempMatch)
 
     def createMatchEntries(self):
+        # Lists for teams to filter and a list of filtered matches
         filteredmatchlist = []
+        teamFilter = []
+        if (self.config.matchteamfilter != "ALL" and self.config.matchteamfilter != ""):
+            teamFilter = self.config.matchteamfilter.split(',')
+        for match in self.matchList:
+            # Conditionals on whether the match should be added to the list or not
+            teamMatchFilter = False
+            unplayedMatchFilter = False
+            qualifierMatchFilter = False
+            # Team Filter
+            if len(teamFilter) == 0:
+                # If the teamfilter is disabled, always add the match
+                teamMatchFilter = True
+            else:
+                # Otherwise, make sure the team is in this match
+                for team in match.redTeamList:
+                    for teamnum in teamFilter:
+                        if team.number == teamnum:
+                            teamMatchFilter = True
+                for team in match.blueTeamList:
+                    for teamnum in teamFilter:
+                        if team.number == teamnum:
+                            teamMatchFilter = True
+            # Unplayed Matches Filter
+            if (self.config.displayunplayedmatches == "TRUE"):
+                # If the filter is enabled, display all matches
+                unplayedMatchFilter = True
+            else:
+                # If it's off, only display played matches
+                if match.matchhappened:
+                    unplayedMatchFilter = True
+            # Qualifier Match Filter
+            if (self.config.displayqualifiermatches == "TRUE"):
+                # If the filter is on, display all matches
+                qualifierMatchFilter = True
+            else:
+                # If the filter is off, only display Playoff Matches
+                if match.score['matchLevel'] == "Playoff":
+                    qualifierMatchFilter = True
+            # Add the match if all 3 qualifiers are met
+            if teamMatchFilter and unplayedMatchFilter and qualifierMatchFilter:
+                filteredmatchlist.insert(len(filteredmatchlist), match)
+        # Actually create the matches based off of the filtered match list
         for match in filteredmatchlist:
             self.createMatchEntry(match)
 
@@ -413,7 +456,7 @@ class Sheets:
         csqp.updateCustomCellFormatting(7, 0, 8, 0, "resizecolumn", columnsize = 500)
         # Sorts the dictionary by MitchRating
         sortedTeamList = []
-        if (self.config.teamsort != "FALSE"):
+        if (self.config.teamsort == "TRUE"):
             import operator
             posCounter = 3
             for team in (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True)):
@@ -551,184 +594,6 @@ class UCSQP:
         # Pushes the cell value list to the google sheet
         if not (len(self.cell_list) == 0):
             self.ws.update_cells(self.cell_list)
-
-class Match:
-    # A class that represents a match entry in the spreadsheet
-    # One is created for each match in an event
-    def __init__(self, scheduledict, scoredict):
-        # Class Imports
-        self.schedule = scheduledict
-        self.score = scoredict
-
-        # Info about the Match Entry
-        self.matchnum = self.schedule["matchNumber"]
-        self.matchtype = self.schedule["tournamentLevel"]
-        self.matchhappened = !(match.schedule["postResultTime"] == "null")
-        self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
-        self.o_x = 1 # X Location of the Entry
-        self.o_y = 1 # Y Location of the Entry
-
-        # Prediction info for the Match Entry
-        self.redteam_mr = {}
-        self.blueteam_mr = {}
-        self.redteam_avmr = 0
-        self.redteam_avrd = 0
-        self.blueteam_avmr = 0
-        self.blueteam_avrd = 0
-        self.redteam_avscr = 0
-        self.blueteam_avscr = 0
-
-    def formatDate(self):
-        datevalues = self.schedule["startTime"].split("T")[0].split("-")
-        return ("(%s/%s/%s)" % (datevalues[1], datevalues[2], datevalues[0]))
-
-    def updateTeamScores(self, teamDict):
-        # Grabs the teams depending on color
-        redTeamList = []
-        blueTeamList = []
-        for team in self.schedule["teams"]:
-            # Adds the team to the list if it's Red and Winning
-            if team["station"][0] == 'R':
-                redTeamList.insert(len(redTeamList), str(team["teamNumber"]))
-            # Adds the team to the list if it's Blue and Winning
-            elif team["station"][0] == 'B':
-                blueTeamList.insert(len(blueTeamList), str(team["teamNumber"]))
-
-        # Figures out which team won or if it was a tie
-        teamwinner = ""
-        if (self.schedule["scoreRedFinal"] > self.schedule["scoreBlueFinal"]):
-            teamwinner = "R"
-        elif (self.schedule["scoreRedFinal"] < self.schedule["scoreBlueFinal"]):
-            teamwinner = "B"
-        else:
-            teamwinner = "T" # If neither of those conditions are met, the match is a tie or something else went wrong
-
-        # Calculates the average MR and RD of the Red Team
-        for teamNumber in redTeamList:
-            self.redteam_avmr += teamDict[teamNumber].mitchrating
-            self.redteam_avrd += teamDict[teamNumber].ratingdeviation
-        self.redteam_avmr /= len(redTeamList)
-        self.redteam_avrd /= len(redTeamList)
-
-        # Calculates the average MR and RD of the Blue Team
-        for teamNumber in blueTeamList:
-            self.blueteam_avmr += teamDict[teamNumber].mitchrating
-            self.blueteam_avrd += teamDict[teamNumber].ratingdeviation
-        self.blueteam_avmr /= len(blueTeamList)
-        self.blueteam_avrd /= len(blueTeamList)
-
-        # Updates each individual team and the match entry
-        if teamwinner == "R":
-            for teamNumber in redTeamList:
-                teamDict[teamNumber].wonAgainst(self.blueteam_avmr, self.blueteam_avrd)
-                self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-            for teamNumber in blueTeamList:
-                teamDict[teamNumber].lostAgainst(self.redteam_avmr, self.redteam_avrd)
-                self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-        if teamwinner == "B":
-            for teamNumber in redTeamList:
-                teamDict[teamNumber].lostAgainst(self.blueteam_avmr, self.blueteam_avrd)
-                self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-            for teamNumber in blueTeamList:
-                teamDict[teamNumber].wonAgainst(self.redteam_avmr, self.redteam_avrd)
-                self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-        if teamwinner == "T":
-            for teamNumber in redTeamList:
-                teamDict[teamNumber].tiedAgainst(self.blueteam_avmr, self.blueteam_avrd)
-                self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-            for teamNumber in blueTeamList:
-                teamDict[teamNumber].tiedAgainst(self.redteam_avmr, self.redteam_avrd)
-                self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-
-        # Updating score averages
-        for team in redTeamList:
-            teamDict[team].totalScore += self.schedule["scoreRedFinal"]
-            teamDict[team].matchesPlayed += 1
-            self.redteam_avscr += (teamDict[team].totalScore / teamDict[team].matchesPlayed)
-        for team in blueTeamList:
-            teamDict[team].totalScore += self.schedule["scoreBlueFinal"]
-            teamDict[team].matchesPlayed += 1
-            self.blueteam_avscr += (teamDict[team].totalScore / teamDict[team].matchesPlayed)
-        self.redteam_avscr /= len(redTeamList)
-        self.blueteam_avscr /= len(blueTeamList)
-
-
-class Team:
-    # A class that represents an individual team in a match
-    # One is created for each team in an event
-    ## Uses an implementation of the GLICKO Rating system to rank teams
-    # http://www.glicko.net/glicko.html
-    # Rating deviation is almost like standard deviation, it shows how consistent the team is or if they are just getting carried
-    _c = 1
-    _q = 0.0057565
-
-    def __init__(self, teamdict):
-        # Class Imports
-        self.team = teamdict
-        # Team Entry Origin
-        self.o_x = 1
-        self.o_y = 1
-        # Team Information
-        self.name = self.team["nameShort"]
-        self.number = self.team["teamNumber"]
-        # Predictions Data
-        self.mitchrating = 1500
-        self.ratingdeviation = 350
-        self.totalScore = 0
-        self.matchesPlayed = 0
-
-    @property
-    def tranformed_rd(self):
-        return min([350, math.sqrt(self.ratingdeviation ** 2 + self._c ** 2)])
-
-    @classmethod   
-    def _g(cls, x):
-        return 1 / (math.sqrt(1 + 3 * cls._q ** 2 * (x ** 2) / math.pi ** 2))
-
-    def expected_score(self, ooamr, ooard, inverse = False):
-        #@param oaamr - Opponent Alliance Average Mitch Rating
-        #@param oaard - Oponent Alliance Average Rating Deviation
-        if inverse == True:
-            g_term = self._g(math.sqrt(ooard ** 2 + self.ratingdeviation ** 2) * (ooamr - self.mitchrating) / 400)
-        else:
-            g_term = self._g(math.sqrt(self.ratingdeviation ** 2 + ooard ** 2) * (self.mitchrating - ooamr) / 400)
-        return (1 / (1 + 10 ** (-1 * g_term)))
-
-    def wonAgainst(self, oaamr, oaard):
-        #@param oaamr - Opponent Alliance Average Mitch Rating
-        #@param oaard - Oponent Alliance Average Rating Deviation
-        s = 1
-        E_term = self.expected_score(oaamr, oaard)
-        d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
-        s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
-        s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
-        self.mitchrating = round(s_new_mitchrating)
-        self.ratingdeviation = round(s_new_ratingdeviation)
-
-    def lostAgainst(self, oaamr, oaard):
-        #@param oaamr - Opponent Alliance Average Mitch Rating
-        #@param oaard - Opponent Alliance Average Rating Deviation
-        s = 0
-        E_term = self.expected_score(oaamr, oaard, inverse = True)
-        d_squared = (self._q ** 2 * (self._g(self.ratingdeviation) ** 2 * E_term * (1 - E_term))) ** -1
-        s_new_mitchrating = oaamr + (self._q / (1 / oaard ** 2 + 1 / d_squared)) * self._g(self.ratingdeviation) * (s - E_term)
-        s_new_ratingdeviation = math.sqrt((1 / oaard ** 2 + 1 / d_squared) ** -1)
-        self.mitchrating = round(s_new_mitchrating)
-        self.ratingdeviation = round(s_new_ratingdeviation)
-    
-    def tiedAgainst(self, oaamr, oaard):
-        #@param oaamr - Opponent Alliance Average Mitch Rating
-        #@param oaard - Opponent Alliance Average Rating Deviation
-        s = 0.5
-        E_term = self.expected_score(oaamr, oaard)
-        d_squared = (self._q ** 2 * (self._g(oaard) ** 2 * E_term * (1 - E_term))) ** -1
-        s_new_mitchrating = self.mitchrating + (self._q / (1 / self.ratingdeviation ** 2 + 1 / d_squared)) * self._g(oaard) * (s - E_term)
-        s_new_ratingdeviation = math.sqrt((1 / self.ratingdeviation ** 2 + 1 / d_squared) ** -1)
-        self.mitchrating = round(s_new_mitchrating)
-        self.ratingdeviation = round(s_new_ratingdeviation)
-    
-    def getRankTitle(self):
-        pass
 
 
 

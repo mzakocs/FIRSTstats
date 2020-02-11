@@ -34,7 +34,7 @@
     # SUB TODO: Figure out a way to delete or edit all entries to show only the filtered ones 
 # TODO: Make a match checker and updater
 # TODO: Finish prediction for unplayed matches
-
+# TODO: Update config class to include the new playoff match customization
 
 import requests
 import json
@@ -47,6 +47,7 @@ class MatchData:
         # Class Imports
         self.config = config
         self.testing = testing
+
     ### Data Retrieval Functions ###
     ## Gets Data from the FIRST API
     # @param testing - allows usage of a local JSON file for testing instead of the FIRST API

@@ -14,7 +14,7 @@ class FirstConfig:
         self.config = configparser.ConfigParser()
         if not os.path.exists('config.ini'):
             self.config ['Event Config'] = {'eventid':'', 'season':''}
-            self.config ['Customization'] = {'teamsort':'TRUE', 'displayunplayedmatches':'TRUE', 'matchteamfilter':'ALL'}
+            self.config ['Customization'] = {'teamsort':'TRUE', 'displayunplayedmatches':'TRUE', 'matchteamfilter':'ALL', 'displayqualifiermatches':'TRUE'}
             self.config ['FIRST API'] = {'Host':'https://frc-api.firstinspires.org', 'Username':'', 'Token':''}
             self.config ['Google Sheets'] = {'sheetid': '', 'oauthjsonpath':'FIRST Python Stats-c64a29c90ec3.json'}
             with open ('config.ini', 'w') as configfile:
@@ -27,6 +27,7 @@ class FirstConfig:
         self.season = self.config['Event Config']['season']
         self.teamsort = self.config['Customization']['teamsort']
         self.displayunplayedmatches = self.config['Customization']['displayunplayedmatches']
+        self.displayqualifiermatches = self.config['Customization']['displayqualifiermatches']
         self.matchteamfilter = self.config['Customization']['matchteamfilter']
         self.sheetid = self.config['Google Sheets']['sheetid']
         self.oauthjsonpath = self.config['Google Sheets']['oauthjsonpath']
