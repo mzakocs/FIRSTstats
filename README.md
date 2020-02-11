@@ -33,7 +33,7 @@ Mitch Zakocs – mitchell.zakocs@pridetronics.com
 
 Distributed under the MIT License. See ``LICENSE`` for more information.
 
-[https://github.com/yourname/github-link](https://github.com/dbader/)
+[https://github.com/zakocsm/](https://github.com/zakocsm/)
 
 ## Contributing
 
