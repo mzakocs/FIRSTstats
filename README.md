@@ -42,9 +42,11 @@ Distributed under the MIT License. See ``LICENSE`` for more information.
 ## Required Libraries
 
 All 3 are related to Google Sheets Integration:
-> pip3 install oauth2client
-> pip3 install gspread
-> pip3 install gspread_formatting
+> pip3 install oauth2client  
+
+> pip3 install gspread  
+
+> pip3 install gspread_formatting  
 
 ## Contributing
 
