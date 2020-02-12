@@ -1,12 +1,13 @@
 # FIRSTStats2020
 > A statistics prediction engine for 2020 FIRST Robotics.
 
-In previous seasons of FIRST, our team used a complicated and messy spreadsheet for event scouting and for match predictions. Our prediction algorithm was rudimentary and extremely innacurate, and we wanted something that was more automated and higher quality than the excel file we were using before.  
+In previous seasons of FIRST, our team used a complicated and messy spreadsheet for event scouting and for match predictions. Our prediction algorithm was rudimentary and extremely inaccurate, and we wanted something that was more automated and higher quality than the excel file we were using before.  
 I made this project to automate a great portion of the scouting process by pulling data from the FIRST API and making it look a lot better in the process.  
 The project is also completely integrated with Google Sheets instead of a spreadsheet, making it much easier to view data, edit notes and configure the app from any web browser.  
-This app is meant to be run as a service on a server or a computer and ran constantly, but can be modified as a one-time-run application if you remove the main execution loop and just call the functions once.
+This app is meant to be run as a service on a server or a computer and ran constantly, but can be modified as a one-time-run application if you remove the main execution loop and just call the functions once.  
+Use with Python 3.8 and up.
 
-## Pictures
+## Images
 
 ![Home Page](header.png)
 
@@ -33,11 +34,21 @@ This app is meant to be run as a service on a server or a computer and ran const
 
 ## Meta
 
-Mitch Zakocs – mitchell.zakocs@pridetronics.com
+Mitch Zakocs – mitchell.zakocs@pridetronics.com  
+
+[https://github.com/zakocsm/](https://github.com/zakocsm/)  
 
 Distributed under the MIT License. See ``LICENSE`` for more information.
 
-[https://github.com/zakocsm/](https://github.com/zakocsm/)
+
+## Required Libraries
+
+All 3 are related to Google Sheets Integration:
+> pip3 install oauth2client  
+
+> pip3 install gspread  
+
+> pip3 install gspread_formatting  
 
 ## Contributing
 
