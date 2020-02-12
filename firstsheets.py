@@ -78,6 +78,7 @@ class Sheets:
             csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
             csqp.pushCellUpdate()
             print("Worksheet Created: " + str(e))
+            return False
 
     def convertLocal(self, x, y, match):
         # Calculate pos based on origin and converts to A1
@@ -102,7 +103,6 @@ class Sheets:
                 templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
                 tempMatch.o_y = templocationholdy
             # Creates the entry in sheets
-            self.createMatchEntry(tempMatch)
             # Updates the Mitch Score of the teams involved in the match
             tempMatch.updateTeamScores(self.teamDict)
             print ("Match Entry Created: ", tempMatch.matchtitle)
@@ -116,13 +116,11 @@ class Sheets:
             # Creates the entry's in sheets
             if tempMatch.matchhappened:
                 tempMatch.updateTeamScores(self.teamDict)
-            self.createMatchEntry(tempMatch)
             print ("Match Entry Created: %s" % tempMatch.matchtitle)
             self.matchList.insert(len(self.matchList), tempMatch)
-
-    def createMatchEntries(self):
+        
         # Lists for teams to filter and a list of filtered matches
-        filteredmatchlist = []
+        self.filteredMatchList = []
         teamFilter = []
         if (self.config.matchteamfilter != "ALL" and self.config.matchteamfilter != ""):
             teamFilter = self.config.matchteamfilter.split(',')
@@ -163,230 +161,265 @@ class Sheets:
                     qualifierMatchFilter = True
             # Add the match if all 3 qualifiers are met
             if teamMatchFilter and unplayedMatchFilter and qualifierMatchFilter:
-                filteredmatchlist.insert(len(filteredmatchlist), match)
-        # Actually create the matches based off of the filtered match list
-        for match in filteredmatchlist:
-            self.createMatchEntry(match)
+                self.filteredMatchList.insert(len(self.filteredMatchList), match)
+            # Resets the origins so that they are underneath each other
+            templocationholdy = 0
+            for x in range(len(self.filteredMatchList)):
+                if x == 0:
+                    self.filteredMatchList[x].o_y = 4 # If it's the very first match, set the origin to the fourth row
+                    templocationholdy = 4
+                else:
+                    templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
+                    tempMatch.o_y = templocationholdy
 
-    def createMatchEntry(self, match):
-        ### Compressed Sheets Query Protocol Setup ###
-        csqp = UCSQP(self.ws, self.sh, match.o_x, match.o_y, match.o_x + 6, match.o_y + 17)
+    def grabNotes(self, csqp):
+        # Goes through the currently displayed matches and grabs their notes so they don't get wiped
+        for x in range(4, (len(self.matchList) + 5), 18):
+            csqp.updateOrigin(1, x)
+            for match in self.matchList:
+                if match.matchtitle == csqp.readCell(1, 1):
+                    match.notes = csqp.readCell(1, 18)
 
-        ### Match Title ###
-        csqp.updateCellValue(1, 1, match.matchtitle)
-        csqp.updateCellFormatting(1, 1, self.matchtitle_format)
+    def nukeMatchEntries(self):
+        # Deletes all of the match entries, used for filters
+        csqp = UCSQP(self.ws, self.sh, self.filteredMatchList[0].o_x, self.filteredMatchList[0].o_y, self.filteredMatchList[0].o_x + 6, len(self.filteredMatchList) * 18)
 
-        ### Section Names ###
-        csqp.updateCellFormatting(1, 2, self.category_title_format)
-        csqp.updateCellFormatting(4, 2, self.category_title_format)
-        csqp.updateCellFormatting(1, 8, self.category_title_format)
-        csqp.updateCellFormatting(4, 8, self.category_title_format)
-        csqp.updateCellValue(1, 2, "Match Info")
-        csqp.updateCellValue(4, 2, "Predictions")
-        csqp.updateCellValue(1, 8, "Auto Score")
-        csqp.updateCellValue(4, 8, "Teleop Score")
+        # Makes sure the notes don't get deleted
+        self.grabNotes(csqp)
 
-        ### Sub-Sections ###
-        ## Centered Values Setup
-        csqp.updateCellRangeFormatting(2, 2, 3, 13, self.centered_format)
-        csqp.updateCellRangeFormatting(5, 2, 6, 13, self.centered_format)
-        
-        ## Match Info
-        csqp.updateCellValue(1, 3, "Team 1")
-        csqp.updateCellValue(2, 3, match.schedule["teams"][0]["teamNumber"]) # Red
-        csqp.updateCellValue(3, 3, match.schedule["teams"][3]["teamNumber"]) # Blue
+        # Deletes all of the entries
+        csqp.nuke()
 
-        csqp.updateCellValue(1, 4, "Team 2")
-        csqp.updateCellValue(2, 4, match.schedule["teams"][1]["teamNumber"]) # Red
-        csqp.updateCellValue(3, 4, match.schedule["teams"][4]["teamNumber"]) # Blue
-
-        csqp.updateCellValue(1, 5, "Team 3")
-        csqp.updateCellValue(2, 5, match.schedule["teams"][2]["teamNumber"]) # Red
-        csqp.updateCellValue(3, 5, match.schedule["teams"][5]["teamNumber"]) # Blue
-
-        csqp.updateCellValue(1, 6, "Switch Level")
-        if not(match.score["alliances"][1]["endgameRungIsLevel"] == "null"):
-            csqp.updateCellValue(2, 6, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
-            csqp.updateCellValue(3, 6, (match.score["alliances"][0]["endgameRungIsLevel"] == "IsLevel")) # Blue
-        else:
-            csqp.updateCellValue(2, 6, "null") # Red
-            csqp.updateCellValue(3, 6, "null") # Blue
-
-        csqp.updateCellValue(1, 7, "Ranking Points")
-        csqp.updateCellValue(2, 7, match.score["alliances"][1]["rp"]) # Red
-        csqp.updateCellValue(3, 7, match.score["alliances"][0]["rp"]) # Blue
-
-        ## Predictions
-        # WIP
-        csqp.updateCellValue(4, 3, "Team 1 MR")
-        csqp.updateCellValue(4, 4, "Team 2 MR")
-        csqp.updateCellValue(4, 5, "Team 3 MR")
-        csqp.updateCellValue(4, 6, "Alliance Av. MR")
-        csqp.updateCellValue(4, 7, "Score Prediction")
-
-        ## Auto Score
-        csqp.updateCellValue(1, 9, ("Inner " + u"\u25CF"))
-        csqp.updateCellValue(2, 9, match.score["alliances"][1]["autoCellsInner"]) # Red
-        csqp.updateCellValue(3, 9, match.score["alliances"][0]["autoCellsInner"]) # Blue
-
-        csqp.updateCellValue(1, 10, ("Outer " + u"\u2B23"))
-        csqp.updateCellValue(2, 10, match.score["alliances"][1]["autoCellsOuter"]) # Red
-        csqp.updateCellValue(3, 10, match.score["alliances"][0]["autoCellsOuter"]) # Blue
-
-        csqp.updateCellValue(1, 11, ("Bottom " + u"\u25A2"))
-        csqp.updateCellValue(2, 11, match.score["alliances"][1]["autoCellsBottom"]) # Red
-        csqp.updateCellValue(3, 11, match.score["alliances"][0]["autoCellsBottom"]) # Blue
-
-        csqp.updateCellValue(1, 12, "Auto Total")
-        if not(match.score["alliances"][1]["autoPoints"] == "null"):
-            csqp.updateCellValue(2, 12, (int(match.score["alliances"][1]["autoCellsInner"]) + int(match.score["alliances"][1]["autoCellsOuter"]) + int(match.score["alliances"][1]["autoCellsBottom"]))) # Red
-            csqp.updateCellValue(3, 12, (int(match.score["alliances"][0]["autoCellsInner"]) + int(match.score["alliances"][0]["autoCellsOuter"]) + int(match.score["alliances"][0]["autoCellsBottom"]))) # Blue
-        else:
-            csqp.updateCellValue(2, 12, "null") # Red
-            csqp.updateCellValue(3, 12, "null") # Blue
-
-        csqp.updateCellValue(1, 13, "Other Points")
-        csqp.updateCellFormatting(1, 13, self.bold_format)
-        if not(match.score["alliances"][1]["foulPoints"] == "null"):
-            csqp.updateCellValue(2, 13, (int(match.score["alliances"][1]["foulPoints"]) + int(match.score["alliances"][1]["adjustPoints"]) + int(match.score["alliances"][1]["controlPanelPoints"]) + int(match.score["alliances"][1]["endgamePoints"]))) # Red
-            csqp.updateCellValue(3, 13, (int(match.score["alliances"][0]["foulPoints"]) + int(match.score["alliances"][0]["adjustPoints"]) + int(match.score["alliances"][0]["controlPanelPoints"]) + int(match.score["alliances"][0]["endgamePoints"]))) # Blue
-        else:
-            csqp.updateCellValue(2, 13, "null") # Red
-            csqp.updateCellValue(3, 13, "null") # Blue
-
-        ## Teleop Score
-        csqp.updateCellValue(4, 9, ("Inner " + u"\u25CF"))
-        csqp.updateCellValue(5, 9, match.score["alliances"][1]["teleopCellsInner"]) # Red
-        csqp.updateCellValue(6, 9, match.score["alliances"][0]["teleopCellsInner"]) # Blue
-
-        csqp.updateCellValue(4, 10, ("Outer " + u"\u2B23"))
-        csqp.updateCellValue(5, 10, match.score["alliances"][1]["teleopCellsOuter"]) # Red
-        csqp.updateCellValue(6, 10, match.score["alliances"][0]["teleopCellsOuter"]) # Blue
-
-        csqp.updateCellValue(4, 11, ("Bottom " + u"\u25A2"))
-        csqp.updateCellValue(5, 11, match.score["alliances"][1]["teleopCellsBottom"]) # Red
-        csqp.updateCellValue(6, 11, match.score["alliances"][0]["teleopCellsBottom"]) # Blue
-        
-        csqp.updateCellValue(4, 12, "Teleop Total")
-        if not(match.score["alliances"][1]["autoPoints"] == "null"):
-            csqp.updateCellValue(5, 12, (int(match.score["alliances"][1]["teleopCellsInner"]) + int(match.score["alliances"][1]["teleopCellsOuter"]) + int(match.score["alliances"][1]["teleopCellsBottom"]))) # Red
-            csqp.updateCellValue(6, 12, (int(match.score["alliances"][0]["teleopCellsInner"]) + int(match.score["alliances"][0]["teleopCellsOuter"]) + int(match.score["alliances"][0]["teleopCellsBottom"]))) # Blue
-        else:
-            csqp.updateCellValue(5, 12, "null") # Red
-            csqp.updateCellValue(6, 12, "null") # Blue
-
-        csqp.updateCellValue(4, 13, "Score Total")
-        csqp.updateCellRangeFormatting(4, 13, 6, 13, self.bold_format)
-        csqp.updateCellValue(5, 13, match.score["alliances"][1]["totalPoints"]) # Red
-        csqp.updateCellValue(6, 13, match.score["alliances"][0]["totalPoints"]) # Blue
-
-#  csqp.updateCellValue(1, 3, "Team 1")
-#         csqp.updateCellValue(2, 3, match.schedule["teams"][0]["teamNumber"]) # Red
-#         csqp.updateCellValue(3, 3, match.schedule["teams"][3]["teamNumber"]) # Blue
-
-#         csqp.updateCellValue(1, 4, "Team 2")
-#         csqp.updateCellValue(2, 4, match.schedule["teams"][1]["teamNumber"]) # Red
-#         csqp.updateCellValue(3, 4, match.schedule["teams"][4]["teamNumber"]) # Blue
-
-#         csqp.updateCellValue(1, 5, "Team 3")
-#         csqp.updateCellValue(2, 5, match.schedule["teams"][2]["teamNumber"]) # Red
-#         csqp.updateCellValue(3, 5, match.schedule["teams"][5]["teamNumber"]) # Blue
-        ## Predictions Data
-        if match.matchhappened:
-            # Updates all the MitchRating and Score Predictions with the stored ones
-            # Red Team
-            csqp.updateCellValue(5, 3, match.redteam_mr[match.schedule["teams"][0]["teamNumber"]])
-            csqp.updateCellValue(5, 4, match.redteam_mr[match.schedule["teams"][1]["teamNumber"]])
-            csqp.updateCellValue(5, 5, match.redteam_mr[match.schedule["teams"][2]["teamNumber"]])
-            csqp.updateCellValue(5, 6, match.redteam_avmr)
-            csqp.updateCellValue(5, 7, match.redteam_avscr)
-            # Blue Team
-            csqp.updateCellValue(6, 3, match.blueteam_mr[match.schedule["teams"][3]["teamNumber"]])
-            csqp.updateCellValue(6, 4, match.blueteam_mr[match.schedule["teams"][4]["teamNumber"]])
-            csqp.updateCellValue(6, 5, match.blueteam_mr[match.schedule["teams"][5]["teamNumber"]])
-            csqp.updateCellValue(6, 6, match.blueteam_avmr)
-            csqp.updateCellValue(6, 7, match.blueteam_avscr)
-        else:
-            # Makes predictions based off previous match data
-            pass
-        
-        ### Team Setup ###
-        ## Red and Blue Colors
-        csqp.updateCellRangeFormatting(2, 2, 2, 13, self.red_color_format)
-        csqp.updateCellRangeFormatting(3, 2, 3, 13, self.blue_color_format)
-        csqp.updateCellRangeFormatting(5, 2, 5, 13, self.red_color_format)
-        csqp.updateCellRangeFormatting(6, 2, 6, 13, self.blue_color_format)
-        ## Team Color Labels
-        csqp.updateCellValue(2, 2, "Red")
-        csqp.updateCellValue(2, 8, "Red")
-        csqp.updateCellValue(5, 2, "Red")
-        csqp.updateCellValue(5, 8, "Red")
-        csqp.updateCellValue(3, 2, "Blue")
-        csqp.updateCellValue(3, 8, "Blue")
-        csqp.updateCellValue(6, 2, "Blue")
-        csqp.updateCellValue(6, 8, "Blue")
-
-        ### Lines & Boxes ###
-        ## Top Category Divider Lines
-        csqp.updateCellRangeFormatting(1, 2, 6, 2, self.box_format)
-        csqp.updateCellRangeFormatting(1, 8, 6, 8, self.box_format)
-        csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_format)
-        ## Main Category Line
-        # Match Info
-        csqp.updateCellRangeFormatting(1, 2, 1, 7, self.box_left_thick_format)
-        csqp.updateCellRangeFormatting(1, 2, 1, 7, self.box_right_format)
-        csqp.updateCellRangeFormatting(3, 2, 3, 7, self.box_left_format)
-        csqp.updateCellRangeFormatting(3, 2, 3, 7, self.box_right_thick_format)
-        # Predictions
-        csqp.updateCellRangeFormatting(4, 2, 4, 7, self.box_left_format)
-        csqp.updateCellRangeFormatting(4, 2, 4, 7, self.box_right_format)
-        csqp.updateCellRangeFormatting(6, 2, 6, 7, self.box_left_format)
-        csqp.updateCellRangeFormatting(6, 2, 6, 7, self.box_right_thick_format)
-        # Auto Score
-        csqp.updateCellRangeFormatting(1, 8, 1, 13, self.box_left_format)
-        csqp.updateCellRangeFormatting(1, 8, 1, 13, self.box_right_format)
-        csqp.updateCellRangeFormatting(3, 8, 3, 13, self.box_left_format)
-        csqp.updateCellRangeFormatting(3, 8, 3, 13, self.box_right_thick_format)
-        # Teleop Score
-        csqp.updateCellRangeFormatting(4, 8, 4, 13, self.box_left_thick_format)
-        csqp.updateCellRangeFormatting(4, 8, 4, 13, self.box_right_format)
-        csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_left_format)
-        csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_right_format)
-        
-        ### Thicc Outline Setup ###
-        csqp.updateCellRangeFormatting(1, 1, 6, 1, self.box_top_thick_format)
-        csqp.updateCellRangeFormatting(1, 1, 6, 1, self.box_bottom_thick_format)
-        csqp.updateCellRangeFormatting(6, 1, 6, 17, self.box_right_thick_format)
-        csqp.updateCellRangeFormatting(1, 1, 1, 17, self.box_left_thick_format)
-        csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_bottom_thick_format)
-        csqp.updateCellRangeFormatting(1, 17, 6, 17, self.box_bottom_thick_format)
-        csqp.updateCellRangeFormatting(1, 8, 6, 8, self.box_top_thick_format)
-        csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_top_thick_format)
-
-        ### Scouting Notes Line Setup ###
-        csqp.updateCellValue(1, 14, "Scouting Notes")
-        csqp.updateCellFormatting(1, 14, self.category_title_format)
-        csqp.updateCustomCellFormatting(1, 14, 6, 14, "merge")
-        csqp.updateCustomCellFormatting(1, 15, 6, 17, "merge")
-        csqp.updateCellRangeFormatting(1, 14, 6, 14, self.box_bottom_format)
-
-        ### Entry Background Color ###
-        ## Sets background color to green if the match has been played, grey otherwise
-        if match.matchhappened:
-            csqp.updateCellRangeFormatting(1, 2, 1, 13, self.match_scheduled_format)
-            csqp.updateCellRangeFormatting(1, 1, 6, 1, self.match_scheduled_format)
-            csqp.updateCellRangeFormatting(4, 2, 4, 13, self.match_scheduled_format)
-            csqp.updateCellRangeFormatting(1, 14, 6, 17, self.match_scheduled_format)
-        else:
-            csqp.updateCellRangeFormatting(1, 2, 1, 13, self.match_played_format)
-            csqp.updateCellRangeFormatting(1, 1, 6, 1, self.match_played_format)
-            csqp.updateCellRangeFormatting(4, 2, 4, 13, self.match_played_format)
-            csqp.updateCellRangeFormatting(1, 14, 6, 17, self.match_played_format)
-        
-        # Pushes all of the cells to google sheets
+        # Pushes the nuke to the sheet
         csqp.pushCellUpdate()
 
-        time.sleep(3)
+    def createMatchEntries(self):
+        # @param nuke - gets rid of all values within the CSQP, used for filters
+        ### Creates all of the match entries
+        ## Compressed Sheets Query Protocol Setup
+        csqp = UCSQP(self.ws, self.sh, self.filteredMatchList[0].o_x, self.filteredMatchList[0].o_y, self.filteredMatchList[0].o_x + 6, len(self.filteredMatchList) * 18)
+
+        # Makes sure the notes don't get deleted
+        self.grabNotes(csqp)
+
+        # Actual match entry creation, uses one CSQP
+        for match in self.filteredMatchList:
+            csqp.updateOrigin(match.o_x, match.o_y)
+            ### Match Title ###
+            csqp.updateCellValue(1, 1, match.matchtitle)
+            csqp.updateCellFormatting(1, 1, self.matchtitle_format)
+
+            ### Section Names ###
+            csqp.updateCellFormatting(1, 2, self.category_title_format)
+            csqp.updateCellFormatting(4, 2, self.category_title_format)
+            csqp.updateCellFormatting(1, 8, self.category_title_format)
+            csqp.updateCellFormatting(4, 8, self.category_title_format)
+            csqp.updateCellValue(1, 2, "Match Info")
+            csqp.updateCellValue(4, 2, "Predictions")
+            csqp.updateCellValue(1, 8, "Auto Score")
+            csqp.updateCellValue(4, 8, "Teleop Score")
+
+            ### Sub-Sections ###
+            ## Centered Values Setup
+            csqp.updateCellRangeFormatting(2, 2, 3, 13, self.centered_format)
+            csqp.updateCellRangeFormatting(5, 2, 6, 13, self.centered_format)
+            
+            ## Match Info
+            csqp.updateCellValue(1, 3, "Team 1")
+            csqp.updateCellValue(2, 3, match.schedule["teams"][0]["teamNumber"]) # Red
+            csqp.updateCellValue(3, 3, match.schedule["teams"][3]["teamNumber"]) # Blue
+
+            csqp.updateCellValue(1, 4, "Team 2")
+            csqp.updateCellValue(2, 4, match.schedule["teams"][1]["teamNumber"]) # Red
+            csqp.updateCellValue(3, 4, match.schedule["teams"][4]["teamNumber"]) # Blue
+
+            csqp.updateCellValue(1, 5, "Team 3")
+            csqp.updateCellValue(2, 5, match.schedule["teams"][2]["teamNumber"]) # Red
+            csqp.updateCellValue(3, 5, match.schedule["teams"][5]["teamNumber"]) # Blue
+
+            csqp.updateCellValue(1, 6, "Switch Level")
+            if not(match.score["alliances"][1]["endgameRungIsLevel"] == "null"):
+                csqp.updateCellValue(2, 6, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
+                csqp.updateCellValue(3, 6, (match.score["alliances"][0]["endgameRungIsLevel"] == "IsLevel")) # Blue
+            else:
+                csqp.updateCellValue(2, 6, "null") # Red
+                csqp.updateCellValue(3, 6, "null") # Blue
+
+            csqp.updateCellValue(1, 7, "Ranking Points")
+            csqp.updateCellValue(2, 7, match.score["alliances"][1]["rp"]) # Red
+            csqp.updateCellValue(3, 7, match.score["alliances"][0]["rp"]) # Blue
+
+            ## Predictions
+            # WIP
+            csqp.updateCellValue(4, 3, "Team 1 MR")
+            csqp.updateCellValue(4, 4, "Team 2 MR")
+            csqp.updateCellValue(4, 5, "Team 3 MR")
+            csqp.updateCellValue(4, 6, "Alliance Av. MR")
+            csqp.updateCellValue(4, 7, "Score Prediction")
+
+            ## Auto Score
+            csqp.updateCellValue(1, 9, ("Inner " + u"\u25CF"))
+            csqp.updateCellValue(2, 9, match.score["alliances"][1]["autoCellsInner"]) # Red
+            csqp.updateCellValue(3, 9, match.score["alliances"][0]["autoCellsInner"]) # Blue
+
+            csqp.updateCellValue(1, 10, ("Outer " + u"\u2B23"))
+            csqp.updateCellValue(2, 10, match.score["alliances"][1]["autoCellsOuter"]) # Red
+            csqp.updateCellValue(3, 10, match.score["alliances"][0]["autoCellsOuter"]) # Blue
+
+            csqp.updateCellValue(1, 11, ("Bottom " + u"\u25A2"))
+            csqp.updateCellValue(2, 11, match.score["alliances"][1]["autoCellsBottom"]) # Red
+            csqp.updateCellValue(3, 11, match.score["alliances"][0]["autoCellsBottom"]) # Blue
+
+            csqp.updateCellValue(1, 12, "Auto Total")
+            if not(match.score["alliances"][1]["autoPoints"] == "null"):
+                csqp.updateCellValue(2, 12, (int(match.score["alliances"][1]["autoCellsInner"]) + int(match.score["alliances"][1]["autoCellsOuter"]) + int(match.score["alliances"][1]["autoCellsBottom"]))) # Red
+                csqp.updateCellValue(3, 12, (int(match.score["alliances"][0]["autoCellsInner"]) + int(match.score["alliances"][0]["autoCellsOuter"]) + int(match.score["alliances"][0]["autoCellsBottom"]))) # Blue
+            else:
+                csqp.updateCellValue(2, 12, "null") # Red
+                csqp.updateCellValue(3, 12, "null") # Blue
+
+            csqp.updateCellValue(1, 13, "Other Points")
+            csqp.updateCellFormatting(1, 13, self.bold_format)
+            if not(match.score["alliances"][1]["foulPoints"] == "null"):
+                csqp.updateCellValue(2, 13, (int(match.score["alliances"][1]["foulPoints"]) + int(match.score["alliances"][1]["adjustPoints"]) + int(match.score["alliances"][1]["controlPanelPoints"]) + int(match.score["alliances"][1]["endgamePoints"]))) # Red
+                csqp.updateCellValue(3, 13, (int(match.score["alliances"][0]["foulPoints"]) + int(match.score["alliances"][0]["adjustPoints"]) + int(match.score["alliances"][0]["controlPanelPoints"]) + int(match.score["alliances"][0]["endgamePoints"]))) # Blue
+            else:
+                csqp.updateCellValue(2, 13, "null") # Red
+                csqp.updateCellValue(3, 13, "null") # Blue
+
+            ## Teleop Score
+            csqp.updateCellValue(4, 9, ("Inner " + u"\u25CF"))
+            csqp.updateCellValue(5, 9, match.score["alliances"][1]["teleopCellsInner"]) # Red
+            csqp.updateCellValue(6, 9, match.score["alliances"][0]["teleopCellsInner"]) # Blue
+
+            csqp.updateCellValue(4, 10, ("Outer " + u"\u2B23"))
+            csqp.updateCellValue(5, 10, match.score["alliances"][1]["teleopCellsOuter"]) # Red
+            csqp.updateCellValue(6, 10, match.score["alliances"][0]["teleopCellsOuter"]) # Blue
+
+            csqp.updateCellValue(4, 11, ("Bottom " + u"\u25A2"))
+            csqp.updateCellValue(5, 11, match.score["alliances"][1]["teleopCellsBottom"]) # Red
+            csqp.updateCellValue(6, 11, match.score["alliances"][0]["teleopCellsBottom"]) # Blue
+            
+            csqp.updateCellValue(4, 12, "Teleop Total")
+            if not(match.score["alliances"][1]["autoPoints"] == "null"):
+                csqp.updateCellValue(5, 12, (int(match.score["alliances"][1]["teleopCellsInner"]) + int(match.score["alliances"][1]["teleopCellsOuter"]) + int(match.score["alliances"][1]["teleopCellsBottom"]))) # Red
+                csqp.updateCellValue(6, 12, (int(match.score["alliances"][0]["teleopCellsInner"]) + int(match.score["alliances"][0]["teleopCellsOuter"]) + int(match.score["alliances"][0]["teleopCellsBottom"]))) # Blue
+            else:
+                csqp.updateCellValue(5, 12, "null") # Red
+                csqp.updateCellValue(6, 12, "null") # Blue
+
+            csqp.updateCellValue(4, 13, "Score Total")
+            csqp.updateCellRangeFormatting(4, 13, 6, 13, self.bold_format)
+            csqp.updateCellValue(5, 13, match.score["alliances"][1]["totalPoints"]) # Red
+            csqp.updateCellValue(6, 13, match.score["alliances"][0]["totalPoints"]) # Blue
+            ## Predictions Data
+            if match.matchhappened:
+                # Updates all the MitchRating and Score Predictions with the stored ones
+                # Red Team
+                csqp.updateCellValue(5, 3, match.redteam_mr[str(match.schedule["teams"][0]["teamNumber"])])
+                csqp.updateCellValue(5, 4, match.redteam_mr[str(match.schedule["teams"][1]["teamNumber"])])
+                csqp.updateCellValue(5, 5, match.redteam_mr[str(match.schedule["teams"][2]["teamNumber"])])
+                csqp.updateCellValue(5, 6, match.redteam_avmr)
+                csqp.updateCellValue(5, 7, match.redteam_avscr)
+                # Blue Team
+                csqp.updateCellValue(6, 3, match.blueteam_mr[str(match.schedule["teams"][3]["teamNumber"])])
+                csqp.updateCellValue(6, 4, match.blueteam_mr[str(match.schedule["teams"][4]["teamNumber"])])
+                csqp.updateCellValue(6, 5, match.blueteam_mr[str(match.schedule["teams"][5]["teamNumber"])])
+                csqp.updateCellValue(6, 6, match.blueteam_avmr)
+                csqp.updateCellValue(6, 7, match.blueteam_avscr)
+            else:
+                # Makes predictions based off previous match data
+                csqp.updateCellValue(5, 3, self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].mitchrating)
+                csqp.updateCellValue(5, 4, self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].mitchrating)
+                csqp.updateCellValue(5, 5, self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating)
+                tempredteam_avmr = (self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating) / 3
+                csqp.updateCellValue(5, 6, tempredteam_avmr)
+                tempredteam_avscr = (((self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].matchesPlayed)) // 3)
+                csqp.updateCellValue(5, 7, tempredteam_avscr)
+                # Blue Team
+                csqp.updateCellValue(6, 3, self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].mitchrating)
+                csqp.updateCellValue(6, 4, self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].mitchrating)
+                csqp.updateCellValue(6, 5, self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].mitchrating)
+                tempblueteam_avmr = ((self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].mitchrating) // 3)
+                csqp.updateCellValue(6, 6, tempblueteam_avmr)
+                tempblueteam_avscr = (((self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].matchesPlayed)) // 3)
+                csqp.updateCellValue(6, 7, tempblueteam_avscr)
+            
+            ### Team Setup ###
+            ## Red and Blue Colors
+            csqp.updateCellRangeFormatting(2, 2, 2, 13, self.red_color_format)
+            csqp.updateCellRangeFormatting(3, 2, 3, 13, self.blue_color_format)
+            csqp.updateCellRangeFormatting(5, 2, 5, 13, self.red_color_format)
+            csqp.updateCellRangeFormatting(6, 2, 6, 13, self.blue_color_format)
+            ## Team Color Labels
+            csqp.updateCellValue(2, 2, "Red")
+            csqp.updateCellValue(2, 8, "Red")
+            csqp.updateCellValue(5, 2, "Red")
+            csqp.updateCellValue(5, 8, "Red")
+            csqp.updateCellValue(3, 2, "Blue")
+            csqp.updateCellValue(3, 8, "Blue")
+            csqp.updateCellValue(6, 2, "Blue")
+            csqp.updateCellValue(6, 8, "Blue")
+
+            ### Lines & Boxes ###
+            ## Top Category Divider Lines
+            csqp.updateCellRangeFormatting(1, 2, 6, 2, self.box_format)
+            csqp.updateCellRangeFormatting(1, 8, 6, 8, self.box_format)
+            csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_format)
+            ## Main Category Line
+            # Match Info
+            csqp.updateCellRangeFormatting(1, 2, 1, 7, self.box_left_thick_format)
+            csqp.updateCellRangeFormatting(1, 2, 1, 7, self.box_right_format)
+            csqp.updateCellRangeFormatting(3, 2, 3, 7, self.box_left_format)
+            csqp.updateCellRangeFormatting(3, 2, 3, 7, self.box_right_thick_format)
+            # Predictions
+            csqp.updateCellRangeFormatting(4, 2, 4, 7, self.box_left_format)
+            csqp.updateCellRangeFormatting(4, 2, 4, 7, self.box_right_format)
+            csqp.updateCellRangeFormatting(6, 2, 6, 7, self.box_left_format)
+            csqp.updateCellRangeFormatting(6, 2, 6, 7, self.box_right_thick_format)
+            # Auto Score
+            csqp.updateCellRangeFormatting(1, 8, 1, 13, self.box_left_format)
+            csqp.updateCellRangeFormatting(1, 8, 1, 13, self.box_right_format)
+            csqp.updateCellRangeFormatting(3, 8, 3, 13, self.box_left_format)
+            csqp.updateCellRangeFormatting(3, 8, 3, 13, self.box_right_thick_format)
+            # Teleop Score
+            csqp.updateCellRangeFormatting(4, 8, 4, 13, self.box_left_thick_format)
+            csqp.updateCellRangeFormatting(4, 8, 4, 13, self.box_right_format)
+            csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_left_format)
+            csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_right_format)
+            
+            ### Thicc Outline Setup ###
+            csqp.updateCellRangeFormatting(1, 1, 6, 1, self.box_top_thick_format)
+            csqp.updateCellRangeFormatting(1, 1, 6, 1, self.box_bottom_thick_format)
+            csqp.updateCellRangeFormatting(6, 1, 6, 17, self.box_right_thick_format)
+            csqp.updateCellRangeFormatting(1, 1, 1, 17, self.box_left_thick_format)
+            csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_bottom_thick_format)
+            csqp.updateCellRangeFormatting(1, 17, 6, 17, self.box_bottom_thick_format)
+            csqp.updateCellRangeFormatting(1, 8, 6, 8, self.box_top_thick_format)
+            csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_top_thick_format)
+
+            ### Scouting Notes Line Setup ###
+            csqp.updateCellValue(1, 14, "Scouting Notes")
+            csqp.updateCellFormatting(1, 14, self.category_title_format)
+            csqp.updateCustomCellFormatting(1, 14, 6, 14, "merge")
+            csqp.updateCustomCellFormatting(1, 15, 6, 17, "merge")
+            csqp.updateCellRangeFormatting(1, 14, 6, 14, self.box_bottom_format)
+
+            ### Entry Background Color ###
+            ## Sets background color to green if the match has been played, grey otherwise
+            if match.matchhappened:
+                csqp.updateCellRangeFormatting(1, 2, 1, 13, self.match_played_format)
+                csqp.updateCellRangeFormatting(1, 1, 6, 1, self.match_played_format)
+                csqp.updateCellRangeFormatting(4, 2, 4, 13, self.match_played_format)
+                csqp.updateCellRangeFormatting(1, 14, 6, 17, self.match_played_format)
+            else:
+                csqp.updateCellRangeFormatting(1, 2, 1, 13, self.match_scheduled_format)
+                csqp.updateCellRangeFormatting(1, 1, 6, 1, self.match_scheduled_format)
+                csqp.updateCellRangeFormatting(4, 2, 4, 13, self.match_scheduled_format)
+                csqp.updateCellRangeFormatting(1, 14, 6, 17, self.match_scheduled_format)
+
+        # Pushes all of the cells to google sheets
+        csqp.pushCellUpdate()
 
     def createTeamObjects(self):
         self.teamDict = {}
@@ -398,13 +431,6 @@ class Sheets:
                 tempTeam.o_y = 3 # If it's the very first match, set the origin below the title and column defs
                 templocationholdy = 3
             else:
-                # Search fails, get the location of the last entry, set the origin below it, and create the entry
-                ### Not working, use in function to find them tho
-                # locatorcell_list = self.ws.findall(self.data.teamData[x - 1]["nameShort"])
-                # lastcell = locatorcell_list.pop()
-                # tempTeam.o_y = self.teamDict[]
-                # tempTeam.o_x = int(lastcell.col)
-                ## TODO: Clean this shit up
                 templocationholdy += 1
                 tempTeam.o_y = templocationholdy
             print ("Team Entry Created: %s" % tempTeam.name)
@@ -412,6 +438,14 @@ class Sheets:
 
     def createTeamEntry(self):
         csqp = UCSQP(self.ws, self.sh, 8, 4, 14, (5 + len(self.teamDict)))
+        # Takes all the team entries and stores their notes, robot weight and robot height so they don't get wiped
+        # Only happens if the list already exists
+        if csqp.readCell(1, 1) == "Team List":
+            for x in range(3, (5 + len(self.teamDict))):
+                teamNum = str(csqp.readCell(2, x))
+                self.teamDict[teamNum].robotType = csqp.readCell(5, x)
+                self.teamDict[teamNum].robotWeight = csqp.readCell(6, x)
+                self.teamDict[teamNum].notes = csqp.readCell(7, x)
         limit = len(self.teamDict) + 2 # +2 adds space for the title and column names
         # Title
         csqp.updateCellFormatting(1, 1, self.matchtitle_format)
@@ -469,11 +503,16 @@ class Sheets:
                 sortedTeamList.insert(len(sortedTeamList), team)
 
         # Inputting Team Data
+        # Checks to see if the 
         for value in sortedTeamList:
             csqp.updateCellValue(value.o_x, value.o_y, value.name)
             csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
             csqp.updateCellValue(value.o_x + 2, value.o_y, value.mitchrating)
             csqp.updateCellValue(value.o_x + 3, value.o_y, value.getRankTitle())
+            # csqp.updateCellValue(value.o_y + 4, value.o_y, value.getRankTitle())
+            csqp.updateCellValue(value.o_x + 5, value.o_y, value.robotType)
+            csqp.updateCellValue(value.o_x + 6, value.o_y, value.robotWeight)
+            csqp.updateCellValue(value.o_x + 7, value.o_y, value.notes)
         # Push the USCQP query to the sheet    
         csqp.pushCellUpdate()
         print ("Sheets Team Entry Updated!")
@@ -494,19 +533,27 @@ class UCSQP:
         self.sh = sh
         self.o_x = r_x1
         self.o_y = r_y1
+        self.o2_x = r_x2
+        self.o2_y = r_y2
 
         # Local Query List Setup
-        self.cell_list = self.ws.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2))) # Grabs the whole section of cells
+        self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2))) # Grabs the whole section of cells
         self.cell_formatting = []
         self.custom_requests = {"requests": []}
+    
+    def findCell(self, tempcell): 
+        for cell in self.cell_list:
+            if (cell.row == a1_to_rowcol(tempcell)[0] and cell.col == a1_to_rowcol(tempcell)[1]):
+                return cell
         
     def updateCellValue(self, x, y, cellvalue):
         tempcell = self.convertLocal(x, y)
         # Finds the cell in the cell list and updates the value
-        for cell in self.cell_list:
-            if (cell.row == a1_to_rowcol(tempcell)[0] and cell.col == a1_to_rowcol(tempcell)[1]):
-                cell.value = cellvalue
-                return cell
+        try:
+            self.findCell(tempcell).value = cellvalue
+        except Exception:
+            self.findCell(tempcell).value = ""
+            
 
     def convertLocal(self, x, y):
         # Calculate pos based on origin and converts to A1
@@ -540,6 +587,7 @@ class UCSQP:
     def updateCustomCellFormatting(self, x1, y1, x2, y2, requesttype, columnsize = 136):
         # Formulates a custom google sheets request for merging cells
         if (requesttype == "merge"):
+            # Does a merge all on the range of cells, used for notes section on the sheet
             temp_x1 = self.convertX(x1) - 1
             temp_y1 = self.convertY(y1) - 1
             temp_x2 = self.convertX(x2)
@@ -548,7 +596,7 @@ class UCSQP:
                             "mergeCells": {
                                 "mergeType": "MERGE_ALL",
                                 "range": {
-                                    "sheetId": self.ws.ws._properties['sheetId'],
+                                    "sheetId": self.ws._properties['sheetId'],
                                     "startRowIndex": temp_y1,
                                     "endRowIndex": temp_y2,
                                     "startColumnIndex": temp_x1,
@@ -558,11 +606,12 @@ class UCSQP:
                         }
             self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
         elif (requesttype == "resizecolumn"):
+            # Resizes the column to the given size, must use @param columnsize
             columnsizeparam = columnsize
             temprequest = {
                             "updateDimensionProperties": {
                                 "range": {
-                                    "sheetId": self.ws.ws._properties['sheetId'],
+                                    "sheetId": self.ws._properties['sheetId'],
                                     "dimension": "COLUMNS",
                                     "startIndex": self.convertX(x1) - 1,
                                     "endIndex": self.convertX(x2) - 1
@@ -580,10 +629,45 @@ class UCSQP:
     def readCell(self, x, y):
         tempcell = self.convertLocal(x, y)
         # Finds the cell in the cell list and returns the value
-        for cell in self.cell_list:
-            if (cell.row == a1_to_rowcol(tempcell)[0] and cell.col == a1_to_rowcol(tempcell)[1]):
-                return cell.value
+        try:
+            return self.findCell(tempcell).value
+        except Exception:
+            return ""
 
+    def nuke(self):
+        # Deletes every value and formatting of all the cells in the sheet
+        # For the love of Jah be careful when using this
+        temprequest = {
+                        "updateCells": {
+                            "range": {
+                                "sheetId": self.ws._properties['sheetId'],
+                                "startRowIndex": self.o_y,
+                                "endRowIndex": self.o2_y,
+                                "startColumnIndex": self.o_x,
+                                "endColumnIndex": self.o2_x
+                            },
+                            "fields": "userEnteredFormat"
+                        }
+                    }
+        self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
+        temprequest = {
+                        "updateCells": {
+                            "range": {
+                                "sheetId": self.ws._properties['sheetId'],
+                                "startRowIndex": self.o_y,
+                                "endRowIndex": self.o2_y,
+                                "startColumnIndex": self.o_x,
+                                "endColumnIndex": self.o2_x
+                            },
+                            "fields": "userEnteredValue"
+                        }
+                    }
+        self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
+
+    def updateOrigin(self, x, y):
+        self.o_x = x
+        self.o_y = y
+        
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
         if not (len(self.cell_formatting) == 0):

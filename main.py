@@ -30,8 +30,9 @@
  #                                                 Written By: Mitch Zakocs                                               #
 ############################################################################################################################
 
-# TODO: Get rest of filters setup on creatematchentries
+# TODO: Test out the match making filters
     # SUB TODO: Figure out a way to delete or edit all entries to show only the filtered ones 
+# TODO: Test out the sheets config
 # TODO: Make a match checker and updater
 # TODO: Finish prediction for unplayed matches
 # TODO: Update config class to include the new playoff match customization
@@ -135,15 +136,19 @@ def main():
     while True:
         csqp = firstsheets.UCSQP(sheets.config_ws, sheets.sh, 4, 6, 5, 13)
         configChanged = config.checkSheetsConfig(sheets.config_ws, csqp)
+        print ("configChanged: " + str(configChanged))
         # Add another condition to the if statement that checks
         # if the data from the API has been changed and if it has
         # update or add the entries
         # Either check the sheet data or store the last used JSON and check it
         # against that
-        if configChanged == False:
+        if configChanged != False:
+            # Pushes the new config to the sheets and data objects
             sheets.config = config
             data.config = config
             if sheets.checkIfSheetExists() == False:
+                # If the sheet doesn't exist, that means the match was changed
+                # This grabs all of the new match data and sets up a new sheet for it
                 data.getScheduleData()
                 data.getScoreData()
                 data.getEventData()
@@ -152,15 +157,18 @@ def main():
                 sheets.createTeamObjects()
                 sheets.createMatchObjects()
             if configChanged == "Filter":
-                # Write a function to delete all entries in the sheet
-                pass
-            if dataChanged == True:
-                # Write a function to see if the data in the sheet has changed
-                pass
+                # Deletes all entries to make way for the new filtered entries
+                # This is because there may be less entries now and we can't
+                # Simply write over them, there will be extra on the bottom
+                sheets.nukeMatchEntries()
+            # if data.dataMatches == False:
+                # if it's a new match, creates a new match object and pushes it to the list
+                # if it's simply a match that's been played, update the data
+                # then creates a new match entry and puts it at the bottom 
             sheets.createTeamEntry()
             sheets.createMatchEntries()
         # Sleeps for 60 seconds on the clock before checking again
-        time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+        time.sleep(10)
 
     
 

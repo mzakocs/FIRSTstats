@@ -28,11 +28,11 @@ class Match:
         # Figures out which team won or if it was a tie
         self.teamWinner = ""
         if (self.schedule["scoreRedFinal"] > self.schedule["scoreBlueFinal"]):
-            self.teamwinner = "R"
+            self.teamWinner = "R"
         elif (self.schedule["scoreRedFinal"] < self.schedule["scoreBlueFinal"]):
-            self.teamwinner = "B"
+            self.teamWinner = "B"
         else:
-            self.teamwinner = "T" # If neither of those conditions are met, the match is a tie or something else went wrong
+            self.teamWinner = "T" # If neither of those conditions are met, the match is a tie or something else went wrong
 
         ## Info about the Match Entry
         self.matchnum = self.schedule["matchNumber"]
@@ -41,6 +41,7 @@ class Match:
         self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
         self.o_x = 1 # X Location of the Entry
         self.o_y = 1 # Y Location of the Entry
+        self.notes = ""
 
         # Prediction info for the Match Entry
         self.redteam_mr = {}
@@ -56,20 +57,43 @@ class Match:
         datevalues = self.schedule["startTime"].split("T")[0].split("-")
         return ("(%s/%s/%s)" % (datevalues[1], datevalues[2], datevalues[0]))
 
-    def updateTeamScores(self, teamDict):
+    def calculateAverages(self, teamDict, scoreav = False):
+        self.redteam_avmr = 0
+        self.redteam_avrd = 0
         # Calculates the average MR and RD of the Red Team
         for teamNumber in self.redTeamList:
             self.redteam_avmr += teamDict[teamNumber].mitchrating
             self.redteam_avrd += teamDict[teamNumber].ratingdeviation
-        self.redteam_avmr /= len(self.redTeamList)
-        self.redteam_avrd /= len(self.redTeamList)
+        self.redteam_avmr //= len(self.redTeamList)
+        self.redteam_avrd //= len(self.redTeamList)
 
+        self.blueteam_avmr = 0
+        self.blueteam_avrd = 0
         # Calculates the average MR and RD of the Blue Team
         for teamNumber in self.blueTeamList:
             self.blueteam_avmr += teamDict[teamNumber].mitchrating
             self.blueteam_avrd += teamDict[teamNumber].ratingdeviation
-        self.blueteam_avmr /= len(self.blueTeamList)
-        self.blueteam_avrd /= len(self.blueTeamList)
+        self.blueteam_avmr //= len(self.blueTeamList)
+        self.blueteam_avrd //= len(self.blueTeamList)
+
+        if scoreav == True:
+            self.redteam_avscr = 0
+            self.blueteam_avscr = 0
+            # Updating score averages
+            for team in self.redTeamList:
+                teamDict[team].totalScore += int(self.schedule["scoreRedFinal"])
+                teamDict[team].matchesPlayed += 1
+                self.redteam_avscr += (teamDict[team].totalScore // teamDict[team].matchesPlayed)
+            for team in self.blueTeamList:
+                teamDict[team].totalScore += int(self.schedule["scoreBlueFinal"])
+                teamDict[team].matchesPlayed += 1
+                self.blueteam_avscr += (teamDict[team].totalScore // teamDict[team].matchesPlayed)
+            self.redteam_avscr //= len(self.redTeamList)
+            self.blueteam_avscr //= len(self.blueTeamList)
+
+    def updateTeamScores(self, teamDict):
+        # Calculates the averages of all the teams to use in the calculations
+        self.calculateAverages(teamDict)
 
         # Updates each individual team and the match entry
         if self.teamWinner == "R":
@@ -79,32 +103,23 @@ class Match:
             for teamNumber in self.blueTeamList:
                 teamDict[teamNumber].lostAgainst(self.redteam_avmr, self.redteam_avrd)
                 self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-        if self.teamWinner == "B":
+        elif self.teamWinner == "B":
             for teamNumber in self.redTeamList:
                 teamDict[teamNumber].lostAgainst(self.blueteam_avmr, self.blueteam_avrd)
                 self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
             for teamNumber in self.blueTeamList:
                 teamDict[teamNumber].wonAgainst(self.redteam_avmr, self.redteam_avrd)
                 self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-        if self.teamWinner == "T":
+        else:
             for teamNumber in self.redTeamList:
                 teamDict[teamNumber].tiedAgainst(self.blueteam_avmr, self.blueteam_avrd)
                 self.redteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
             for teamNumber in self.blueTeamList:
                 teamDict[teamNumber].tiedAgainst(self.redteam_avmr, self.redteam_avrd)
                 self.blueteam_mr[teamNumber] = teamDict[teamNumber].mitchrating
-
-        # Updating score averages
-        for team in self.redTeamList:
-            teamDict[team].totalScore += self.schedule["scoreRedFinal"]
-            teamDict[team].matchesPlayed += 1
-            self.redteam_avscr += (teamDict[team].totalScore / teamDict[team].matchesPlayed)
-        for team in self.blueTeamList:
-            teamDict[team].totalScore += self.schedule["scoreBlueFinal"]
-            teamDict[team].matchesPlayed += 1
-            self.blueteam_avscr += (teamDict[team].totalScore / teamDict[team].matchesPlayed)
-        self.redteam_avscr /= len(self.redTeamList)
-        self.blueteam_avscr /= len(self.blueTeamList)
+        
+        # Recalculates the averages to use on the Google Sheet
+        self.calculateAverages(teamDict, scoreav = True)    
 
 
 class Team:
@@ -125,6 +140,9 @@ class Team:
         # Team Information
         self.name = self.team["nameShort"]
         self.number = self.team["teamNumber"]
+        self.notes = ""
+        self.robotType = ""
+        self.robotWeight = ""
         # Predictions Data
         self.mitchrating = 1500
         self.ratingdeviation = 350

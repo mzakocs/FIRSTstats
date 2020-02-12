@@ -1,0 +1,6 @@
+__pycache__
+config.ini
+FIRST Python Stats-*.json
+*.pyc
+*.code-workspace
+.vscode

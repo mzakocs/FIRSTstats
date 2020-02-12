@@ -40,29 +40,34 @@ class FirstConfig:
         ## Checks to see if the config matches the config on sheets
         # If it doesn't, update the values on the local config and returns False
         # If it does, simply returns True
-        tempResult = True
-        sheets_eventid = csqp.readCell(2, 1)
-        sheets_season = int(csqp.readCell(2, 2))
+        tempResult = False
+        # [Event Config]
+        sheets_eventid = csqp.readCell(2, 2)
+        sheets_season = int(csqp.readCell(2, 3))
+        # [Customization]
+        sheets_matchteamfilter = csqp.readCell(2, 5)
         sheets_teamsort = csqp.readCell(2, 6)
-        sheets_displayunplayedmatches = csqp.readCell(2, 7)
-        sheets_matchteamfilter = csqp.readCell(2, 8)
-        # Compares the values
+        sheets_displayqualifiermatches = csqp.readCell(2, 7)
+        sheets_displayunplayedmatches = csqp.readCell(2, 8)
+        # Compares the values of the sheets config and local config
         if not sheets_eventid == self.eventid:
             self.config['Event Config']['eventid'] = sheets_eventid
-            tempResult == False
+            tempResult == True
         if not sheets_season == self.season:
-            self.config['Event Config']['season'] = sheets_season
-            tempResult == False
+            self.config['Event Config']['season'] = str(sheets_season)
+            tempResult == True
         if not sheets_teamsort == self.teamsort:
             self.config['Customization']['teamsort'] = sheets_teamsort
             tempResult == "Filter"
         if not sheets_displayunplayedmatches == self.displayunplayedmatches:
             self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
             tempResult == "Filter"
+        if not sheets_displayqualifiermatches == self.displayqualifiermatches:
+            self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
         if not sheets_matchteamfilter == self.matchteamfilter:
             self.config['Customization']['matchteamfilter'] = sheets_matchteamfilter
             tempResult == "Filter"
-        if tempResult != True:
+        if tempResult != False:
             with open ('config.ini', 'w') as configfile:
                 self.config.write(configfile)
         return tempResult
