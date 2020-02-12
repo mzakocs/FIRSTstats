@@ -133,16 +133,19 @@ def main():
     # Main Execution Loop
     starttime = time.time()
     print("Service started at: ", starttime)
+    csqp = firstsheets.UCSQP(sheets.config_ws, sheets.sh, 4, 6, 5, 13)
     while True:
-        csqp = firstsheets.UCSQP(sheets.config_ws, sheets.sh, 4, 6, 5, 13)
+        # Grabs the new config from the sheet
+        csqp.updateList()
+        # Checks to see if the config has changed
         configChanged = config.checkSheetsConfig(sheets.config_ws, csqp)
-        print ("configChanged: " + str(configChanged))
         # Add another condition to the if statement that checks
         # if the data from the API has been changed and if it has
         # update or add the entries
         # Either check the sheet data or store the last used JSON and check it
         # against that
         if configChanged != False:
+            print("Config Change Detected!")
             # Pushes the new config to the sheets and data objects
             sheets.config = config
             data.config = config
@@ -154,8 +157,6 @@ def main():
                 data.getEventData()
                 data.getTeamData()
                 sheets.data = data
-                sheets.createTeamObjects()
-                sheets.createMatchObjects()
             if configChanged == "Filter":
                 # Deletes all entries to make way for the new filtered entries
                 # This is because there may be less entries now and we can't
@@ -165,9 +166,11 @@ def main():
                 # if it's a new match, creates a new match object and pushes it to the list
                 # if it's simply a match that's been played, update the data
                 # then creates a new match entry and puts it at the bottom 
+            sheets.createTeamObjects()
+            sheets.createMatchObjects()
             sheets.createTeamEntry()
             sheets.createMatchEntries()
-        # Sleeps for 60 seconds on the clock before checking again
+        # Sleeps for 10 seconds before checking again
         time.sleep(10)
 
 

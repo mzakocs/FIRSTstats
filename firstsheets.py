@@ -116,9 +116,10 @@ class Sheets:
             # Creates the entry's in sheets
             if tempMatch.matchhappened:
                 tempMatch.updateTeamScores(self.teamDict)
-            print ("Match Entry Created: %s" % tempMatch.matchtitle)
+            print ("Match Entry Created: ", tempMatch.matchtitle)
             self.matchList.insert(len(self.matchList), tempMatch)
         
+    def filterMatches(self):
         # Lists for teams to filter and a list of filtered matches
         self.filteredMatchList = []
         teamFilter = []
@@ -170,7 +171,7 @@ class Sheets:
                     templocationholdy = 4
                 else:
                     templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
-                    tempMatch.o_y = templocationholdy
+                    self.filteredMatchList[x].o_y = templocationholdy
 
     def grabNotes(self, csqp):
         # Goes through the currently displayed matches and grabs their notes so they don't get wiped
@@ -196,8 +197,13 @@ class Sheets:
     def createMatchEntries(self):
         # @param nuke - gets rid of all values within the CSQP, used for filters
         ### Creates all of the match entries
+
+        # Sets the filters
+        self.filterMatches()
+        
         ## Compressed Sheets Query Protocol Setup
-        csqp = UCSQP(self.ws, self.sh, self.filteredMatchList[0].o_x, self.filteredMatchList[0].o_y, self.filteredMatchList[0].o_x + 6, len(self.filteredMatchList) * 18)
+        grabXLimit = (len(self.filteredMatchList) * 18) + 2
+        csqp = UCSQP(self.ws, self.sh, self.filteredMatchList[0].o_x, self.filteredMatchList[0].o_y, self.filteredMatchList[0].o_x + 6, grabXLimit)
 
         # Makes sure the notes don't get deleted
         self.grabNotes(csqp)
@@ -437,11 +443,11 @@ class Sheets:
             self.teamDict[str(tempTeam.number)] = tempTeam
 
     def createTeamEntry(self):
-        csqp = UCSQP(self.ws, self.sh, 8, 4, 14, (5 + len(self.teamDict)))
+        csqp = UCSQP(self.ws, self.sh, 8, 4, 15, (5 + len(self.teamDict)))
         # Takes all the team entries and stores their notes, robot weight and robot height so they don't get wiped
         # Only happens if the list already exists
         if csqp.readCell(1, 1) == "Team List":
-            for x in range(3, (5 + len(self.teamDict))):
+            for x in range(3, (3 + len(self.teamDict))):
                 teamNum = str(csqp.readCell(2, x))
                 self.teamDict[teamNum].robotType = csqp.readCell(5, x)
                 self.teamDict[teamNum].robotWeight = csqp.readCell(6, x)
@@ -501,9 +507,7 @@ class Sheets:
             # If it's not enabled in config, don't sort the teams
             for team in self.teamDict.values():
                 sortedTeamList.insert(len(sortedTeamList), team)
-
         # Inputting Team Data
-        # Checks to see if the 
         for value in sortedTeamList:
             csqp.updateCellValue(value.o_x, value.o_y, value.name)
             csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
@@ -538,6 +542,7 @@ class UCSQP:
 
         # Local Query List Setup
         self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2))) # Grabs the whole section of cells
+        print('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2)))
         self.cell_formatting = []
         self.custom_requests = {"requests": []}
     
@@ -554,7 +559,6 @@ class UCSQP:
         except Exception:
             self.findCell(tempcell).value = ""
             
-
     def convertLocal(self, x, y):
         # Calculate pos based on origin and converts to A1
         temp_x = self.o_x + x - 1
@@ -629,10 +633,7 @@ class UCSQP:
     def readCell(self, x, y):
         tempcell = self.convertLocal(x, y)
         # Finds the cell in the cell list and returns the value
-        try:
-            return self.findCell(tempcell).value
-        except Exception:
-            return ""
+        return self.findCell(tempcell).value
 
     def nuke(self):
         # Deletes every value and formatting of all the cells in the sheet
@@ -641,8 +642,8 @@ class UCSQP:
                         "updateCells": {
                             "range": {
                                 "sheetId": self.ws._properties['sheetId'],
-                                "startRowIndex": self.o_y,
-                                "endRowIndex": self.o2_y,
+                                "startRowIndex": self.o_y - 1,
+                                "endRowIndex": self.o2_y - 1,
                                 "startColumnIndex": self.o_x,
                                 "endColumnIndex": self.o2_x
                             },
@@ -650,24 +651,29 @@ class UCSQP:
                         }
                     }
         self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
-        temprequest = {
+        temprequest2 = {
                         "updateCells": {
                             "range": {
                                 "sheetId": self.ws._properties['sheetId'],
-                                "startRowIndex": self.o_y,
-                                "endRowIndex": self.o2_y,
+                                "startRowIndex": self.o_y - 1,
+                                "endRowIndex": self.o2_y - 1,
                                 "startColumnIndex": self.o_x,
                                 "endColumnIndex": self.o2_x
                             },
                             "fields": "userEnteredValue"
                         }
                     }
-        self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
+        self.custom_requests["requests"].insert(len(self.custom_requests), temprequest2)
 
     def updateOrigin(self, x, y):
+        # Use this to update the origin of where the UCSQP places cells
         self.o_x = x
         self.o_y = y
-        
+    
+    def updateList(self):
+        # Use this when you want to re-grab the data from the sheet
+        self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(self.o_y, self.o_x), gspread.utils.rowcol_to_a1(self.o2_y, self.o2_x)))
+
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
         if not (len(self.cell_formatting) == 0):

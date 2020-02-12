@@ -21,6 +21,9 @@ class FirstConfig:
                 self.config.write(configfile)
             print ("Please fill out the config file and restart the application!")
             exit()
+        self.checkLocalConfig()
+        
+    def checkLocalConfig(self):
         # Reads config file for values
         self.config.read('config.ini')
         self.eventid = self.config['Event Config']['eventid']
@@ -52,22 +55,23 @@ class FirstConfig:
         # Compares the values of the sheets config and local config
         if not sheets_eventid == self.eventid:
             self.config['Event Config']['eventid'] = sheets_eventid
-            tempResult == True
-        if not sheets_season == self.season:
+            tempResult = True
+        if not sheets_season == int(self.season):
             self.config['Event Config']['season'] = str(sheets_season)
-            tempResult == True
+            tempResult = True
         if not sheets_teamsort == self.teamsort:
             self.config['Customization']['teamsort'] = sheets_teamsort
-            tempResult == "Filter"
+            tempResult = "Filter"
         if not sheets_displayunplayedmatches == self.displayunplayedmatches:
             self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
-            tempResult == "Filter"
+            tempResult = "Filter"
         if not sheets_displayqualifiermatches == self.displayqualifiermatches:
             self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
         if not sheets_matchteamfilter == self.matchteamfilter:
             self.config['Customization']['matchteamfilter'] = sheets_matchteamfilter
-            tempResult == "Filter"
+            tempResult = "Filter"
         if tempResult != False:
             with open ('config.ini', 'w') as configfile:
                 self.config.write(configfile)
+            self.checkLocalConfig()
         return tempResult
