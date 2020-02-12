@@ -170,7 +170,6 @@ def main():
         # Sleeps for 60 seconds on the clock before checking again
         time.sleep(10)
 
-    
 
 if __name__ == "__main__":
     main()

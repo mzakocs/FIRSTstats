@@ -9,9 +9,9 @@ Use with Python 3.8 and up.
 
 ## Images
 
-![Home Page](header.png)
+![Home Page](media/header.png)
 
-![Match Sheet](matchsheet.png)
+![Match Sheet](media/matchsheet.png)
 
 ## Classes
 
