@@ -3,3 +3,4 @@ FIRST Python Stats-*.json
 *.pyc
 *.code-workspace
 .vscode
+config.ini
