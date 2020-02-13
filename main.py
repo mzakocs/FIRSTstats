@@ -149,14 +149,18 @@ def main():
             # Pushes the new config to the sheets and data objects
             sheets.config = config
             data.config = config
-            if sheets.checkIfSheetExists() == False:
+            if configChanged == "Match":
                 # If the sheet doesn't exist, that means the match was changed
                 # This grabs all of the new match data and sets up a new sheet for it
+                if sheets.checkIfSheetExists() == False:
+                    sheets.createSheet()
                 data.getScheduleData()
                 data.getScoreData()
                 data.getEventData()
                 data.getTeamData()
                 sheets.data = data
+                sheets.createTeamObjects()
+                sheets.createMatchObjects()
             if configChanged == "Filter":
                 # Deletes all entries to make way for the new filtered entries
                 # This is because there may be less entries now and we can't
@@ -166,8 +170,6 @@ def main():
                 # if it's a new match, creates a new match object and pushes it to the list
                 # if it's simply a match that's been played, update the data
                 # then creates a new match entry and puts it at the bottom 
-            sheets.createTeamObjects()
-            sheets.createMatchObjects()
             sheets.createTeamEntry()
             sheets.createMatchEntries()
         # Sleeps for 10 seconds before checking again

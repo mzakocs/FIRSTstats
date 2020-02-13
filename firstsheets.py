@@ -7,6 +7,7 @@
 # pip gspread, gspread_formatting, pyopenssl and oauth2client for google sheets functionality
 import time
 import gspread
+import operator
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 from firstpredictions import *
@@ -56,29 +57,35 @@ class Sheets:
         except Exception as e:
             print (e + " sheet not found! Please create for Sheets Config Functionality")
             pass
-        self.checkIfSheetExists()
+        if self.checkIfSheetExists() == False:
+            self.createSheet()
 
     def checkIfSheetExists(self):
-        try:
-            self.ws = self.sh.worksheet(str(self.config.eventid))
-            return True
-        except Exception as e:
-            self.ws = self.sh.add_worksheet(title=str(self.config.eventid), rows="3000", cols="30")
-            # Creates a CSQP object to setup the worksheet
-            csqp = UCSQP(self.ws, self.sh, 1, 1, 2, 30)
-            # Creates formatting for the title and competition location
-            csqp.updateCellFormatting(1, 1, self.title_format)
-            csqp.updateCellFormatting(1, 2, self.venue_format)
-            # Adds the event info into the first 2 rows
-            csqp.updateCellValue(1, 1, self.data.eventData["name"])
-            csqp.updateCellValue(1, 2, self.data.eventData["venue"])
-            # Setting the cell size to 136 for all cells
-            csqp.updateCustomCellFormatting(1, 0 , 30, 0, "resizecolumn")
-            # Changing the font for all cells
-            csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
-            csqp.pushCellUpdate()
-            print("Worksheet Created: " + str(e))
-            return False
+        worksheetsList = self.sh.worksheets()
+        found = False
+        for worksheet in worksheetsList:
+            if worksheet._properties['title'] == str(self.config.eventid):
+                found = True
+                self.ws = self.sh.worksheet(str(self.config.eventid))
+        return found
+    
+    def createSheet(self):
+        # Creates the worksheet
+        self.ws = self.sh.add_worksheet(title=str(self.config.eventid), rows="3000", cols="30")
+        # Creates a CSQP object to setup the worksheet
+        csqp = UCSQP(self.ws, self.sh, 1, 1, 2, 30)
+        # Creates formatting for the title and competition location
+        csqp.updateCellFormatting(1, 1, self.title_format)
+        csqp.updateCellFormatting(1, 2, self.venue_format)
+        # Adds the event info into the first 2 rows
+        csqp.updateCellValue(1, 1, self.data.eventData["name"])
+        csqp.updateCellValue(1, 2, self.data.eventData["venue"])
+        # Setting the cell size to 136 for all cells
+        csqp.updateCustomCellFormatting(1, 0 , 30, 0, "resizecolumn")
+        # Changing the font for all cells
+        csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
+        csqp.pushCellUpdate()
+        print("Worksheet Created: " + str(self.config.eventid))
 
     def convertLocal(self, x, y, match):
         # Calculate pos based on origin and converts to A1
@@ -118,6 +125,7 @@ class Sheets:
                 tempMatch.updateTeamScores(self.teamDict)
             print ("Match Entry Created: ", tempMatch.matchtitle)
             self.matchList.insert(len(self.matchList), tempMatch)
+        self.filterMatches()
         
     def filterMatches(self):
         # Lists for teams to filter and a list of filtered matches
@@ -183,7 +191,8 @@ class Sheets:
 
     def nukeMatchEntries(self):
         # Deletes all of the match entries, used for filters
-        csqp = UCSQP(self.ws, self.sh, self.filteredMatchList[0].o_x, self.filteredMatchList[0].o_y, self.filteredMatchList[0].o_x + 6, len(self.filteredMatchList) * 18)
+        grabXLimit = (len(self.matchList) * 18) + 2
+        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 6, grabXLimit)
 
         # Makes sure the notes don't get deleted
         self.grabNotes(csqp)
@@ -197,16 +206,16 @@ class Sheets:
     def createMatchEntries(self):
         # @param nuke - gets rid of all values within the CSQP, used for filters
         ### Creates all of the match entries
-
-        # Sets the filters
-        self.filterMatches()
         
         ## Compressed Sheets Query Protocol Setup
-        grabXLimit = (len(self.filteredMatchList) * 18) + 2
-        csqp = UCSQP(self.ws, self.sh, self.filteredMatchList[0].o_x, self.filteredMatchList[0].o_y, self.filteredMatchList[0].o_x + 6, grabXLimit)
+        grabXLimit = (len(self.matchList) * 18) + 2
+        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 6, grabXLimit)
 
         # Makes sure the notes don't get deleted
         self.grabNotes(csqp)
+
+        # Sets the filters
+        self.filterMatches()
 
         # Actual match entry creation, uses one CSQP
         for match in self.filteredMatchList:
@@ -393,6 +402,14 @@ class Sheets:
             csqp.updateCellRangeFormatting(4, 8, 4, 13, self.box_right_format)
             csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_left_format)
             csqp.updateCellRangeFormatting(6, 8, 6, 13, self.box_right_format)
+
+            ### Scouting Notes Line Setup ###
+            csqp.updateCellValue(1, 14, "Scouting Notes")
+            csqp.updateCellFormatting(1, 14, self.category_title_format)
+            csqp.updateCustomCellFormatting(1, 14, 6, 14, "merge")
+            csqp.updateCustomCellFormatting(1, 15, 6, 17, "merge")
+            csqp.updateCellValue(1, 15, match.notes)
+            csqp.updateCellRangeFormatting(1, 14, 6, 14, self.box_bottom_format)
             
             ### Thicc Outline Setup ###
             csqp.updateCellRangeFormatting(1, 1, 6, 1, self.box_top_thick_format)
@@ -403,13 +420,6 @@ class Sheets:
             csqp.updateCellRangeFormatting(1, 17, 6, 17, self.box_bottom_thick_format)
             csqp.updateCellRangeFormatting(1, 8, 6, 8, self.box_top_thick_format)
             csqp.updateCellRangeFormatting(1, 13, 6, 13, self.box_top_thick_format)
-
-            ### Scouting Notes Line Setup ###
-            csqp.updateCellValue(1, 14, "Scouting Notes")
-            csqp.updateCellFormatting(1, 14, self.category_title_format)
-            csqp.updateCustomCellFormatting(1, 14, 6, 14, "merge")
-            csqp.updateCustomCellFormatting(1, 15, 6, 17, "merge")
-            csqp.updateCellRangeFormatting(1, 14, 6, 14, self.box_bottom_format)
 
             ### Entry Background Color ###
             ## Sets background color to green if the match has been played, grey otherwise
@@ -444,61 +454,66 @@ class Sheets:
 
     def createTeamEntry(self):
         csqp = UCSQP(self.ws, self.sh, 8, 4, 15, (5 + len(self.teamDict)))
+        # Checks to see if the match entry is already there
+        alreadyExists = csqp.readCell(1, 1) == "Team List"
         # Takes all the team entries and stores their notes, robot weight and robot height so they don't get wiped
         # Only happens if the list already exists
-        if csqp.readCell(1, 1) == "Team List":
+        if alreadyExists:
             for x in range(3, (3 + len(self.teamDict))):
                 teamNum = str(csqp.readCell(2, x))
                 self.teamDict[teamNum].robotType = csqp.readCell(5, x)
                 self.teamDict[teamNum].robotWeight = csqp.readCell(6, x)
                 self.teamDict[teamNum].notes = csqp.readCell(7, x)
+
         limit = len(self.teamDict) + 2 # +2 adds space for the title and column names
-        # Title
-        csqp.updateCellFormatting(1, 1, self.matchtitle_format)
-        csqp.updateCellValue(1, 1, "Team List")
-        # Centered Values
-        csqp.updateCellRangeFormatting(1, 2, 7, 2, self.centered_format)
-        csqp.updateCellRangeFormatting(3, 3, 3, limit, self.centered_format)
-        # Columns
-        csqp.updateCellValue(1, 2, "Team Name")
-        csqp.updateCellValue(2, 2, "Team Number")
-        csqp.updateCellValue(3, 2, ("MitchRating" + u"\u2122"))
-        csqp.updateCellValue(4, 2, "Rank Title")
-        csqp.updateCellValue(5, 2, "Robot Type")
-        csqp.updateCellValue(6, 2, "Robot Weight")
-        csqp.updateCellValue(7, 2, "Notes")
-        # Boxes
-        csqp.updateCellRangeFormatting(1, 2, 7, 2, self.box_format)
-        csqp.updateCellRangeFormatting(1, 3, 1, limit, self.box_right_format)
-        csqp.updateCellRangeFormatting(2, 3, 2, limit, self.box_right_format)
-        csqp.updateCellRangeFormatting(3, 3, 3, limit, self.box_right_format)
-        csqp.updateCellRangeFormatting(4, 3, 4, limit, self.box_right_format)
-        csqp.updateCellRangeFormatting(5, 3, 5, limit, self.box_right_format)
-        csqp.updateCellRangeFormatting(6, 3, 6, limit, self.box_right_format)
-        # Thick Boxes
-        csqp.updateCellRangeFormatting(1, 1, 7, 1, self.box_top_thick_format)
-        csqp.updateCellRangeFormatting(1, 1, 7, 1, self.box_bottom_thick_format)
-        csqp.updateCellRangeFormatting(7, 1, 7, limit, self.box_right_thick_format)
-        csqp.updateCellRangeFormatting(1, 1, 1, limit, self.box_left_thick_format)
-        csqp.updateCellRangeFormatting(1, limit, 7, limit, self.box_bottom_thick_format)
-        # Colors
-        csqp.updateCellRangeFormatting(1, 1, 7, 1, self.purple_title_format)
-        csqp.updateCellRangeFormatting(1, 2, 1, limit, self.purple2_format)
-        csqp.updateCellRangeFormatting(2, 2, 2, limit, self.purple1_format)
-        csqp.updateCellRangeFormatting(3, 2, 3, limit, self.purple2_format)
-        csqp.updateCellRangeFormatting(4, 2, 4, limit, self.purple1_format)
-        csqp.updateCellRangeFormatting(5, 2, 5, limit, self.purple2_format)
-        csqp.updateCellRangeFormatting(6, 2, 6, limit, self.purple1_format)
-        csqp.updateCellRangeFormatting(7, 2, 7, limit, self.purple2_format)
-        ### TODO: FIX SORT FUNCTION
-        # Name Column Resize
-        csqp.updateCustomCellFormatting(1, 0, 2, 0, "resizecolumn", columnsize = 300)
-        csqp.updateCustomCellFormatting(7, 0, 8, 0, "resizecolumn", columnsize = 500)
+        # Only creates the table and formatting if the entry isn't there
+        if not alreadyExists:
+            # Title
+            csqp.updateCellFormatting(1, 1, self.matchtitle_format)
+            csqp.updateCellValue(1, 1, "Team List")
+            # Centered Values
+            csqp.updateCellRangeFormatting(1, 2, 7, 2, self.centered_format)
+            csqp.updateCellRangeFormatting(3, 3, 3, limit, self.centered_format)
+            # Columns
+            csqp.updateCellValue(1, 2, "Team Name")
+            csqp.updateCellValue(2, 2, "Team Number")
+            csqp.updateCellValue(3, 2, ("MitchRating" + u"\u2122"))
+            csqp.updateCellValue(4, 2, "Rank Title")
+            csqp.updateCellValue(5, 2, "Robot Type")
+            csqp.updateCellValue(6, 2, "Robot Weight")
+            csqp.updateCellValue(7, 2, "Notes")
+            # Boxes
+            csqp.updateCellRangeFormatting(1, 2, 7, 2, self.box_format)
+            csqp.updateCellRangeFormatting(1, 3, 1, limit, self.box_right_format)
+            csqp.updateCellRangeFormatting(2, 3, 2, limit, self.box_right_format)
+            csqp.updateCellRangeFormatting(3, 3, 3, limit, self.box_right_format)
+            csqp.updateCellRangeFormatting(4, 3, 4, limit, self.box_right_format)
+            csqp.updateCellRangeFormatting(5, 3, 5, limit, self.box_right_format)
+            csqp.updateCellRangeFormatting(6, 3, 6, limit, self.box_right_format)
+            # Thick Boxes
+            csqp.updateCellRangeFormatting(1, 1, 7, 1, self.box_top_thick_format)
+            csqp.updateCellRangeFormatting(1, 1, 7, 1, self.box_bottom_thick_format)
+            csqp.updateCellRangeFormatting(7, 1, 7, limit, self.box_right_thick_format)
+            csqp.updateCellRangeFormatting(1, 1, 1, limit, self.box_left_thick_format)
+            csqp.updateCellRangeFormatting(1, limit, 7, limit, self.box_bottom_thick_format)
+            # Colors
+            csqp.updateCellRangeFormatting(1, 1, 7, 1, self.purple_title_format)
+            csqp.updateCellRangeFormatting(1, 2, 1, limit, self.purple2_format)
+            csqp.updateCellRangeFormatting(2, 2, 2, limit, self.purple1_format)
+            csqp.updateCellRangeFormatting(3, 2, 3, limit, self.purple2_format)
+            csqp.updateCellRangeFormatting(4, 2, 4, limit, self.purple1_format)
+            csqp.updateCellRangeFormatting(5, 2, 5, limit, self.purple2_format)
+            csqp.updateCellRangeFormatting(6, 2, 6, limit, self.purple1_format)
+            csqp.updateCellRangeFormatting(7, 2, 7, limit, self.purple2_format)
+            # Name Column Resize
+            csqp.updateCustomCellFormatting(1, 0, 2, 0, "resizecolumn", columnsize = 300)
+            csqp.updateCustomCellFormatting(7, 0, 8, 0, "resizecolumn", columnsize = 500)
+
         # Sorts the dictionary by MitchRating
         sortedTeamList = []
+        # Resets the origins to the order in the list
+        posCounter = 3
         if (self.config.teamsort == "TRUE"):
-            import operator
-            posCounter = 3
             for team in (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True)):
                 team.o_y = posCounter
                 posCounter += 1
@@ -506,20 +521,20 @@ class Sheets:
         else:
             # If it's not enabled in config, don't sort the teams
             for team in self.teamDict.values():
+                team.o_y = posCounter
+                posCounter += 1
                 sortedTeamList.insert(len(sortedTeamList), team)
         # Inputting Team Data
         for value in sortedTeamList:
             csqp.updateCellValue(value.o_x, value.o_y, value.name)
             csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
             csqp.updateCellValue(value.o_x + 2, value.o_y, value.mitchrating)
-            csqp.updateCellValue(value.o_x + 3, value.o_y, value.getRankTitle())
-            # csqp.updateCellValue(value.o_y + 4, value.o_y, value.getRankTitle())
-            csqp.updateCellValue(value.o_x + 5, value.o_y, value.robotType)
-            csqp.updateCellValue(value.o_x + 6, value.o_y, value.robotWeight)
-            csqp.updateCellValue(value.o_x + 7, value.o_y, value.notes)
+            # csqp.updateCellValue(value.o_x + 3, value.o_y, value.getRankTitle())
+            csqp.updateCellValue(value.o_x + 4, value.o_y, value.robotType)
+            csqp.updateCellValue(value.o_x + 5, value.o_y, value.robotWeight)
+            csqp.updateCellValue(value.o_x + 6, value.o_y, value.notes)
         # Push the USCQP query to the sheet    
         csqp.pushCellUpdate()
-        print ("Sheets Team Entry Updated!")
 
 
 class UCSQP:
@@ -542,7 +557,6 @@ class UCSQP:
 
         # Local Query List Setup
         self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2))) # Grabs the whole section of cells
-        print('%s:%s' % (gspread.utils.rowcol_to_a1(r_y1, r_x1), gspread.utils.rowcol_to_a1(r_y2, r_x2)))
         self.cell_formatting = []
         self.custom_requests = {"requests": []}
     
@@ -638,32 +652,25 @@ class UCSQP:
     def nuke(self):
         # Deletes every value and formatting of all the cells in the sheet
         # For the love of Jah be careful when using this
+
+        # Does a custom request to remove all formatting off of the cells
         temprequest = {
                         "updateCells": {
                             "range": {
                                 "sheetId": self.ws._properties['sheetId'],
                                 "startRowIndex": self.o_y - 1,
-                                "endRowIndex": self.o2_y - 1,
-                                "startColumnIndex": self.o_x,
+                                "endRowIndex": self.o2_y,
+                                "startColumnIndex": self.o_x - 1,
                                 "endColumnIndex": self.o2_x
                             },
                             "fields": "userEnteredFormat"
                         }
                     }
         self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
-        temprequest2 = {
-                        "updateCells": {
-                            "range": {
-                                "sheetId": self.ws._properties['sheetId'],
-                                "startRowIndex": self.o_y - 1,
-                                "endRowIndex": self.o2_y - 1,
-                                "startColumnIndex": self.o_x,
-                                "endColumnIndex": self.o2_x
-                            },
-                            "fields": "userEnteredValue"
-                        }
-                    }
-        self.custom_requests["requests"].insert(len(self.custom_requests), temprequest2)
+
+        # Sets the values of all the cells to blank
+        for cell in self.cell_list:
+            cell.value = ""
 
     def updateOrigin(self, x, y):
         # Use this to update the origin of where the UCSQP places cells

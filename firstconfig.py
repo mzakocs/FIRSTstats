@@ -53,12 +53,6 @@ class FirstConfig:
         sheets_displayqualifiermatches = csqp.readCell(2, 7)
         sheets_displayunplayedmatches = csqp.readCell(2, 8)
         # Compares the values of the sheets config and local config
-        if not sheets_eventid == self.eventid:
-            self.config['Event Config']['eventid'] = sheets_eventid
-            tempResult = True
-        if not sheets_season == int(self.season):
-            self.config['Event Config']['season'] = str(sheets_season)
-            tempResult = True
         if not sheets_teamsort == self.teamsort:
             self.config['Customization']['teamsort'] = sheets_teamsort
             tempResult = "Filter"
@@ -66,10 +60,17 @@ class FirstConfig:
             self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
             tempResult = "Filter"
         if not sheets_displayqualifiermatches == self.displayqualifiermatches:
-            self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
+            self.config['Customization']['displayqualifiermatches'] = sheets_displayqualifiermatches
+            tempResult = "Filter"
         if not sheets_matchteamfilter == self.matchteamfilter:
             self.config['Customization']['matchteamfilter'] = sheets_matchteamfilter
             tempResult = "Filter"
+        if not sheets_eventid == self.eventid:
+            self.config['Event Config']['eventid'] = sheets_eventid
+            tempResult = "Match"
+        if not sheets_season == int(self.season):
+            self.config['Event Config']['season'] = str(sheets_season)
+            tempResult = "Match"
         if tempResult != False:
             with open ('config.ini', 'w') as configfile:
                 self.config.write(configfile)
