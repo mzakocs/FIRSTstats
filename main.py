@@ -64,9 +64,9 @@ class MatchData:
                 self.playoffScheduleData = json.load(json_file)
         else:
             try:    
-                response = requests.get('%s/v2.0/%s/schedule/%s/qual/hybrid' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+                response = requests.get('%s/v2.0/%s/schedule/%s/qual/hybrid' % (self.config.host, str(self.config.season), self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
                 self.qualScheduleData = response.json()["Schedule"]
-                response = requests.get('%s/v2.0/%s/schedule/%s/playoff/hybrid' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+                response = requests.get('%s/v2.0/%s/schedule/%s/playoff/hybrid' % (self.config.host, str(self.config.season), self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
                 self.playoffScheduleData = response.json()["Schedule"]
             except:
                 print("Cannot retrieve Match Data from FIRST API!")

@@ -580,7 +580,6 @@ class Sheets:
 
     def createMatchEntries(self):
         ### Creates all of the match entries
-        
         ## Compressed Sheets Query Protocol Setup
         grabXLimit = (len(self.matchList) * 18) + 2
         csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabXLimit)
@@ -592,6 +591,7 @@ class Sheets:
         self.filterMatches()
 
         # Actual match entry creation, uses one CSQP
+        print("Creating Match Entries...")
         for match in self.filteredMatchList:
             csqp.updateOrigin(match.o_x, match.o_y)
             ### Match Title ###
@@ -625,14 +625,15 @@ class Sheets:
             csqp.updateCellValue(1, 5, "Team 3")
             csqp.updateCellValue(2, 5, match.schedule["teams"][2]["teamNumber"]) # Red
             csqp.updateCellValue(3, 5, match.schedule["teams"][5]["teamNumber"]) # Blue
-
-            csqp.updateCellValue(1, 6, "Switch Level")
-            if not(match.score["alliances"][1]["endgameRungIsLevel"] == "null"):
-                csqp.updateCellValue(2, 6, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
-                csqp.updateCellValue(3, 6, (match.score["alliances"][0]["endgameRungIsLevel"] == "IsLevel")) # Blue
-            else:
-                csqp.updateCellValue(2, 6, "null") # Red
-                csqp.updateCellValue(3, 6, "null") # Blue
+            
+            if self.config.season == 2020:
+                csqp.updateCellValue(1, 6, "Switch Level")
+                if not(match.score["alliances"][1]["endgameRungIsLevel"] == "null"):
+                    csqp.updateCellValue(2, 6, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
+                    csqp.updateCellValue(3, 6, (match.score["alliances"][0]["endgameRungIsLevel"] == "IsLevel")) # Blue
+                else:
+                    csqp.updateCellValue(2, 6, "null") # Red
+                    csqp.updateCellValue(3, 6, "null") # Blue
 
             csqp.updateCellValue(1, 7, "Ranking Points")
             csqp.updateCellValue(2, 7, match.score["alliances"][1]["rp"]) # Red
@@ -646,61 +647,63 @@ class Sheets:
             csqp.updateCellValue(4, 6, "Alliance Av. MR")
             csqp.updateCellValue(4, 7, "Score Prediction")
 
-            ## Auto Score
-            csqp.updateCellValue(1, 9, ("Inner " + u"\u25CF"))
-            csqp.updateCellValue(2, 9, match.score["alliances"][1]["autoCellsInner"]) # Red
-            csqp.updateCellValue(3, 9, match.score["alliances"][0]["autoCellsInner"]) # Blue
+            if self.config.season == 2020:
+                ## Auto Score
+                csqp.updateCellValue(1, 9, ("Inner " + u"\u25CF"))
+                csqp.updateCellValue(2, 9, match.score["alliances"][1]["autoCellsInner"]) # Red
+                csqp.updateCellValue(3, 9, match.score["alliances"][0]["autoCellsInner"]) # Blue
 
-            csqp.updateCellValue(1, 10, ("Outer " + u"\u2B23"))
-            csqp.updateCellValue(2, 10, match.score["alliances"][1]["autoCellsOuter"]) # Red
-            csqp.updateCellValue(3, 10, match.score["alliances"][0]["autoCellsOuter"]) # Blue
+                csqp.updateCellValue(1, 10, ("Outer " + u"\u2B23"))
+                csqp.updateCellValue(2, 10, match.score["alliances"][1]["autoCellsOuter"]) # Red
+                csqp.updateCellValue(3, 10, match.score["alliances"][0]["autoCellsOuter"]) # Blue
 
-            csqp.updateCellValue(1, 11, ("Bottom " + u"\u25A2"))
-            csqp.updateCellValue(2, 11, match.score["alliances"][1]["autoCellsBottom"]) # Red
-            csqp.updateCellValue(3, 11, match.score["alliances"][0]["autoCellsBottom"]) # Blue
+                csqp.updateCellValue(1, 11, ("Bottom " + u"\u25A2"))
+                csqp.updateCellValue(2, 11, match.score["alliances"][1]["autoCellsBottom"]) # Red
+                csqp.updateCellValue(3, 11, match.score["alliances"][0]["autoCellsBottom"]) # Blue
 
-            csqp.updateCellValue(1, 12, "Auto Total")
-            if not(match.score["alliances"][1]["autoPoints"] == "null"):
-                csqp.updateCellValue(2, 12, (int(match.score["alliances"][1]["autoCellsInner"]) + int(match.score["alliances"][1]["autoCellsOuter"]) + int(match.score["alliances"][1]["autoCellsBottom"]))) # Red
-                csqp.updateCellValue(3, 12, (int(match.score["alliances"][0]["autoCellsInner"]) + int(match.score["alliances"][0]["autoCellsOuter"]) + int(match.score["alliances"][0]["autoCellsBottom"]))) # Blue
-            else:
-                csqp.updateCellValue(2, 12, "null") # Red
-                csqp.updateCellValue(3, 12, "null") # Blue
+                csqp.updateCellValue(1, 12, "Auto Total")
+                if not(match.score["alliances"][1]["autoPoints"] == "null"):
+                    csqp.updateCellValue(2, 12, (int(match.score["alliances"][1]["autoCellsInner"]) + int(match.score["alliances"][1]["autoCellsOuter"]) + int(match.score["alliances"][1]["autoCellsBottom"]))) # Red
+                    csqp.updateCellValue(3, 12, (int(match.score["alliances"][0]["autoCellsInner"]) + int(match.score["alliances"][0]["autoCellsOuter"]) + int(match.score["alliances"][0]["autoCellsBottom"]))) # Blue
+                else:
+                    csqp.updateCellValue(2, 12, "null") # Red
+                    csqp.updateCellValue(3, 12, "null") # Blue
 
-            csqp.updateCellValue(1, 13, "Other Points")
-            csqp.updateCellFormatting(1, 13, self.bold_format)
-            if not(match.score["alliances"][1]["foulPoints"] == "null"):
-                csqp.updateCellValue(2, 13, (int(match.score["alliances"][1]["foulPoints"]) + int(match.score["alliances"][1]["adjustPoints"]) + int(match.score["alliances"][1]["controlPanelPoints"]) + int(match.score["alliances"][1]["endgamePoints"]))) # Red
-                csqp.updateCellValue(3, 13, (int(match.score["alliances"][0]["foulPoints"]) + int(match.score["alliances"][0]["adjustPoints"]) + int(match.score["alliances"][0]["controlPanelPoints"]) + int(match.score["alliances"][0]["endgamePoints"]))) # Blue
-            else:
-                csqp.updateCellValue(2, 13, "null") # Red
-                csqp.updateCellValue(3, 13, "null") # Blue
+                csqp.updateCellValue(1, 13, "Other Points")
+                csqp.updateCellFormatting(1, 13, self.bold_format)
+                if not(match.score["alliances"][1]["foulPoints"] == "null"):
+                    csqp.updateCellValue(2, 13, (int(match.score["alliances"][1]["foulPoints"]) + int(match.score["alliances"][1]["adjustPoints"]) + int(match.score["alliances"][1]["controlPanelPoints"]) + int(match.score["alliances"][1]["endgamePoints"]))) # Red
+                    csqp.updateCellValue(3, 13, (int(match.score["alliances"][0]["foulPoints"]) + int(match.score["alliances"][0]["adjustPoints"]) + int(match.score["alliances"][0]["controlPanelPoints"]) + int(match.score["alliances"][0]["endgamePoints"]))) # Blue
+                else:
+                    csqp.updateCellValue(2, 13, "null") # Red
+                    csqp.updateCellValue(3, 13, "null") # Blue
 
-            ## Teleop Score
-            csqp.updateCellValue(4, 9, ("Inner " + u"\u25CF"))
-            csqp.updateCellValue(5, 9, match.score["alliances"][1]["teleopCellsInner"]) # Red
-            csqp.updateCellValue(6, 9, match.score["alliances"][0]["teleopCellsInner"]) # Blue
+                ## Teleop Score
+                csqp.updateCellValue(4, 9, ("Inner " + u"\u25CF"))
+                csqp.updateCellValue(5, 9, match.score["alliances"][1]["teleopCellsInner"]) # Red
+                csqp.updateCellValue(6, 9, match.score["alliances"][0]["teleopCellsInner"]) # Blue
 
-            csqp.updateCellValue(4, 10, ("Outer " + u"\u2B23"))
-            csqp.updateCellValue(5, 10, match.score["alliances"][1]["teleopCellsOuter"]) # Red
-            csqp.updateCellValue(6, 10, match.score["alliances"][0]["teleopCellsOuter"]) # Blue
+                csqp.updateCellValue(4, 10, ("Outer " + u"\u2B23"))
+                csqp.updateCellValue(5, 10, match.score["alliances"][1]["teleopCellsOuter"]) # Red
+                csqp.updateCellValue(6, 10, match.score["alliances"][0]["teleopCellsOuter"]) # Blue
 
-            csqp.updateCellValue(4, 11, ("Bottom " + u"\u25A2"))
-            csqp.updateCellValue(5, 11, match.score["alliances"][1]["teleopCellsBottom"]) # Red
-            csqp.updateCellValue(6, 11, match.score["alliances"][0]["teleopCellsBottom"]) # Blue
-            
-            csqp.updateCellValue(4, 12, "Teleop Total")
-            if not(match.score["alliances"][1]["autoPoints"] == "null"):
-                csqp.updateCellValue(5, 12, (int(match.score["alliances"][1]["teleopCellsInner"]) + int(match.score["alliances"][1]["teleopCellsOuter"]) + int(match.score["alliances"][1]["teleopCellsBottom"]))) # Red
-                csqp.updateCellValue(6, 12, (int(match.score["alliances"][0]["teleopCellsInner"]) + int(match.score["alliances"][0]["teleopCellsOuter"]) + int(match.score["alliances"][0]["teleopCellsBottom"]))) # Blue
-            else:
-                csqp.updateCellValue(5, 12, "null") # Red
-                csqp.updateCellValue(6, 12, "null") # Blue
+                csqp.updateCellValue(4, 11, ("Bottom " + u"\u25A2"))
+                csqp.updateCellValue(5, 11, match.score["alliances"][1]["teleopCellsBottom"]) # Red
+                csqp.updateCellValue(6, 11, match.score["alliances"][0]["teleopCellsBottom"]) # Blue
+                
+                csqp.updateCellValue(4, 12, "Teleop Total")
+                if not(match.score["alliances"][1]["autoPoints"] == "null"):
+                    csqp.updateCellValue(5, 12, (int(match.score["alliances"][1]["teleopCellsInner"]) + int(match.score["alliances"][1]["teleopCellsOuter"]) + int(match.score["alliances"][1]["teleopCellsBottom"]))) # Red
+                    csqp.updateCellValue(6, 12, (int(match.score["alliances"][0]["teleopCellsInner"]) + int(match.score["alliances"][0]["teleopCellsOuter"]) + int(match.score["alliances"][0]["teleopCellsBottom"]))) # Blue
+                else:
+                    csqp.updateCellValue(5, 12, "null") # Red
+                    csqp.updateCellValue(6, 12, "null") # Blue
 
             csqp.updateCellValue(4, 13, "Score Total")
             csqp.updateCellRangeFormatting(4, 13, 6, 13, self.bold_format)
             csqp.updateCellValue(5, 13, match.score["alliances"][1]["totalPoints"]) # Red
             csqp.updateCellValue(6, 13, match.score["alliances"][0]["totalPoints"]) # Blue
+
             ## Predictions Data
             if match.matchhappened:
                 # Updates all the MitchRating and Score Predictions with the stored ones
@@ -815,6 +818,7 @@ class Sheets:
                 csqp.updateCellRangeFormatting(1, 14, 6, 17, self.match_scheduled_format)
 
         # Pushes all of the cells to google sheets
+        print ("Done!")
         csqp.pushCellUpdate()
 
     def createTeamObjects(self):

@@ -40,7 +40,7 @@ class FirstConfig:
         self.host = self.config['FIRST API']['Host']
         self.username = self.config['FIRST API']['Username']
         self.password = self.config['FIRST API']['Token']
-        self.authString = base64.b64encode(('%s:%s' % (self.username, self.password)).encode('utf-8'))
+        self.authString = base64.b64encode(('%s:%s' % (self.username, self.password)).encode('utf-8')).decode()
 
     def checkSheetsConfig(self, worksheet, csqp):
         ## Checks to see if the config matches the config on sheets
@@ -76,8 +76,8 @@ class FirstConfig:
         if not sheets_eventid == self.eventid:
             self.config['Event Config']['eventid'] = sheets_eventid
             tempResult = "Match"
-        if not sheets_season == self.season:
-            self.config['Event Config']['season'] = sheets_season
+        if not int(sheets_season) == int(self.season):
+            self.config['Event Config']['season'] = str(sheets_season)
             tempResult = "Match"
         if tempResult != False:
             with open ('config.ini', 'w') as configfile:
