@@ -13,7 +13,8 @@ class FirstConfig:
         # Opens the config file or creates it if it doesn't exist
         self.config = configparser.ConfigParser()
         if not os.path.exists('config.ini'):
-            self.config ['Event Config'] = {'eventid':'', 'season':''}
+            self.config ['Power Switch'] = {'powerswitch' : 'On'}
+            self.config ['Event Config'] = {'eventid':'', 'season':'2020', 'dataretrieval':'Live'}
             self.config ['Customization'] = {'teamsort':'TRUE', 'displayunplayedmatches':'TRUE', 'matchteamfilter':'ALL', 'displayqualifiermatches':'TRUE'}
             self.config ['FIRST API'] = {'Host':'https://frc-api.firstinspires.org', 'Username':'', 'Token':''}
             self.config ['Google Sheets'] = {'sheetid': '', 'oauthjsonpath':'FIRST Python Stats-c64a29c90ec3.json'}
@@ -26,8 +27,10 @@ class FirstConfig:
     def checkLocalConfig(self):
         # Reads config file for values
         self.config.read('config.ini')
+        self.powerswitch = self.config['Power Switch']['powerswitch']
         self.eventid = self.config['Event Config']['eventid']
         self.season = self.config['Event Config']['season']
+        self.dataretrieval = self.config['Event Config']['dataretrieval']
         self.teamsort = self.config['Customization']['teamsort']
         self.displayunplayedmatches = self.config['Customization']['displayunplayedmatches']
         self.displayqualifiermatches = self.config['Customization']['displayqualifiermatches']
@@ -52,24 +55,29 @@ class FirstConfig:
         sheets_teamsort = csqp.readCell(2, 6)
         sheets_displayqualifiermatches = csqp.readCell(2, 7)
         sheets_displayunplayedmatches = csqp.readCell(2, 8)
+        # [Power Switch]
+        sheets_powerswitch = csqp.readCell(1, 9)
         # Compares the values of the sheets config and local config
+        if not sheets_powerswitch == self.powerswitch:
+            self.config['Power Switch']['powerswitch'] = sheets_powerswitch
+            tempResult = "Power"
         if not sheets_teamsort == self.teamsort:
             self.config['Customization']['teamsort'] = sheets_teamsort
-            tempResult = "Filter"
+            tempResult = "TeamFilter"
         if not sheets_displayunplayedmatches == self.displayunplayedmatches:
             self.config['Customization']['displayunplayedmatches'] = sheets_displayunplayedmatches
-            tempResult = "Filter"
+            tempResult = "MatchFilter"
         if not sheets_displayqualifiermatches == self.displayqualifiermatches:
             self.config['Customization']['displayqualifiermatches'] = sheets_displayqualifiermatches
-            tempResult = "Filter"
+            tempResult = "MatchFilter"
         if not sheets_matchteamfilter == self.matchteamfilter:
             self.config['Customization']['matchteamfilter'] = sheets_matchteamfilter
-            tempResult = "Filter"
+            tempResult = "MatchFilter"
         if not sheets_eventid == self.eventid:
             self.config['Event Config']['eventid'] = sheets_eventid
             tempResult = "Match"
-        if not sheets_season == int(self.season):
-            self.config['Event Config']['season'] = str(sheets_season)
+        if not sheets_season == self.season:
+            self.config['Event Config']['season'] = sheets_season
             tempResult = "Match"
         if tempResult != False:
             with open ('config.ini', 'w') as configfile:

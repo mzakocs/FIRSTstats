@@ -25,15 +25,6 @@ class Match:
             elif team["station"][0] == 'B':
                 self.blueTeamList.insert(len(self.blueTeamList), str(team["teamNumber"]))
 
-        # Figures out which team won or if it was a tie
-        self.teamWinner = ""
-        if (self.schedule["scoreRedFinal"] > self.schedule["scoreBlueFinal"]):
-            self.teamWinner = "R"
-        elif (self.schedule["scoreRedFinal"] < self.schedule["scoreBlueFinal"]):
-            self.teamWinner = "B"
-        else:
-            self.teamWinner = "T" # If neither of those conditions are met, the match is a tie or something else went wrong
-
         ## Info about the Match Entry
         self.matchnum = self.schedule["matchNumber"]
         self.matchtype = self.schedule["tournamentLevel"]
@@ -92,6 +83,15 @@ class Match:
             self.blueteam_avscr //= len(self.blueTeamList)
 
     def updateTeamScores(self, teamDict):
+        # Figures out which team won or if it was a tie
+        self.teamWinner = ""
+        if (int(self.schedule["scoreRedFinal"]) > int(self.schedule["scoreBlueFinal"])):
+            self.teamWinner = "R"
+        elif (int(self.schedule["scoreRedFinal"]) < int(self.schedule["scoreBlueFinal"])):
+            self.teamWinner = "B"
+        else:
+            self.teamWinner = "T" # If neither of those conditions are met, the match is a tie or something else went wrong
+        
         # Calculates the averages of all the teams to use in the calculations
         self.calculateAverages(teamDict)
 

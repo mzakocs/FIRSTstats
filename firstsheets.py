@@ -6,6 +6,8 @@
 
 # pip gspread, gspread_formatting, pyopenssl and oauth2client for google sheets functionality
 import time
+import datetime
+import json
 import gspread
 import operator
 from oauth2client.service_account import ServiceAccountCredentials
@@ -50,7 +52,8 @@ class Sheets:
         self.purple_title_format = CellFormat(backgroundColor = Color(0.6, 0.2, 0.4))
         self.purple1_format = CellFormat(backgroundColor = Color(0.78, 0.33, 0.55))
         self.purple2_format = CellFormat(backgroundColor = Color(0.85, 0.55, 0.71))
-        
+        self.nuke_format = CellFormat(textFormat = TextFormat(bold = False, fontSize = 10, fontFamily = 'Montserrat'))
+
         # Sheets Config Setup
         try:
             self.config_ws = self.sh.worksheet("Home")
@@ -61,13 +64,348 @@ class Sheets:
             self.createSheet()
 
     def checkIfSheetExists(self):
-        worksheetsList = self.sh.worksheets()
         found = False
+        worksheetsList = self.sh.worksheets()
         for worksheet in worksheetsList:
             if worksheet._properties['title'] == str(self.config.eventid):
                 found = True
                 self.ws = self.sh.worksheet(str(self.config.eventid))
         return found
+    
+    def checkManualEntry(self):
+        # Function for checking data if manual data retrieval is on
+        csqp = UCSQP(self.config_ws, self.sh, 1, 21, 5, 29)
+        update = csqp.readCell(5, 5)
+        if update != "":
+            matchNum = 1
+            matchtitle = csqp.readCell(2, 2)
+            matchtime = str(datetime.datetime.now()).replace(" ", "T")
+            print ("Match Manually Inputted!")
+            if matchtitle != "":
+                matchtype = matchtitle.split()[0]
+            redTeam1 = csqp.readCell(2, 4)
+            redTeam2 = csqp.readCell(2, 5)
+            redTeam3 = csqp.readCell(2, 6)
+            redSwitchLevel = csqp.readCell(2, 7)
+            if redSwitchLevel == "Yes" or bool(redSwitchLevel) == True:
+                redSwitchLevel = "IsLevel"
+            elif redSwitchLevel == "":
+                redSwitchLevel = "null"
+            else:
+                redSwitchLevel = "NotLevel"
+            redRankingPoints = csqp.readCell(2, 8)
+            redFinalScore = csqp.readCell(2, 9)
+            blueTeam1 = csqp.readCell(3, 4)
+            blueTeam2 = csqp.readCell(3, 5)
+            blueTeam3 = csqp.readCell(3, 6)
+            blueSwitchLevel = csqp.readCell(3, 7)
+            if blueSwitchLevel == "Yes" or bool(blueSwitchLevel) == True:
+                blueSwitchLevel = "IsLevel"
+            elif blueSwitchLevel == "":
+                blueSwitchLevel = "null"
+            else:
+                blueSwitchLevel = "NotLevel"
+            blueRankingPoints = csqp.readCell(3, 8)
+            blueFinalScore = csqp.readCell(3, 9)
+            # For if match happened or not
+            if blueFinalScore == "" or redFinalScore == "":
+                postResultTime = "null"
+            else:
+                postResultTime = "1"
+            # Event Data
+            eventname = csqp.readCell(5, 3)
+            eventvenue = csqp.readCell(5, 4)
+            # Team Data
+            teamname = csqp.readCell(5, 7)
+            teamnumber = csqp.readCell(5, 8)
+            if redTeam1 != "" and blueTeam1 != "":
+                if matchtype == "Qualification" or matchtype == "Qualifier" or matchtype == "qualification" or matchtype == "qualifier":
+                    with open('manual/manualqualscheduledata.json') as json_file:
+                        qualScheduleData = json.load(json_file)
+                    with open('manual/manualqualscoredata.json') as json_file:
+                        qualScoreData = json.load(json_file)
+                    # Sets the match number
+                    if len(qualScoreData) != 0:
+                        matchNum = qualScoreData[-1]["matchNumber"] + 1
+                    tempMatchEntryScore = {
+                                    "alliances": [
+                                        {
+                                            "alliance": "Blue",
+                                            "autoCellsBottom": 0,
+                                            "autoCellsOuter": 0,
+                                            "autoCellsInner": 0,
+                                            "teleopCellsBottom": 0,
+                                            "teleopCellsOuter": 0,
+                                            "teleopCellsInner": 0,
+                                            "endgameRungIsLevel": blueSwitchLevel,
+                                            "autoInitLinePoints": 0,
+                                            "autoCellPoints": 0,
+                                            "autoPoints": 0,
+                                            "teleopCellPoints": 0,
+                                            "controlPanelPoints": 0,
+                                            "endgamePoints": 0,
+                                            "teleopPoints": "69",
+                                            "shieldOperationalRankingPoint":"False",
+                                            "shieldEnergizedRankingPoint":"False",
+                                            "foulCount":"0",
+                                            "techFoulCount":"0",
+                                            "adjustPoints":"0",
+                                            "foulPoints":"0",
+                                            "rp":blueRankingPoints,
+                                            "totalPoints": blueFinalScore
+                                        }, 
+                                        {
+                                            "alliance": "Red",
+                                            "autoCellsBottom": 0,
+                                            "autoCellsOuter": 0,
+                                            "autoCellsInner": 0,
+                                            "teleopCellsBottom": 0,
+                                            "teleopCellsOuter": 0,
+                                            "teleopCellsInner": 0,
+                                            "endgameRungIsLevel": redSwitchLevel,
+                                            "autoInitLinePoints": 0,
+                                            "autoCellPoints": 0,
+                                            "autoPoints": 0,
+                                            "teleopCellPoints": 0,
+                                            "controlPanelPoints": 0,
+                                            "endgamePoints": 0,
+                                            "teleopPoints": "69",
+                                            "shieldOperationalRankingPoint":"False",
+                                            "shieldEnergizedRankingPoint":"False",
+                                            "foulCount":"0",
+                                            "techFoulCount":"0",
+                                            "adjustPoints":"0",
+                                            "foulPoints":"0",
+                                            "rp":redRankingPoints,
+                                            "totalPoints": redFinalScore
+                                        }
+                                    ], 
+                                    "matchLevel": "Qualification", 
+                                    "matchNumber": matchNum
+                                    }
+                    tempMatchEntrySchedule = {
+                                        "description": matchtitle, 
+                                        "matchNumber": matchNum, 
+                                        "postResultTime": postResultTime, 
+                                        "scoreBlueAuto": 0, 
+                                        "scoreBlueFinal": blueFinalScore, 
+                                        "scoreBlueFoul": 0, 
+                                        "scoreRedAuto": 0, 
+                                        "scoreRedFinal": redFinalScore, 
+                                        "scoreRedFoul": 0, 
+                                        "startTime": matchtime, 
+                                        "teams": [
+                                            { 
+                                                "station": "Red1",  
+                                                "teamNumber": redTeam1
+                                            }, 
+                                            { 
+                                                "station": "Red2",  
+                                                "teamNumber": redTeam2
+                                            }, 
+                                            { 
+                                                "station": "Red3",  
+                                                "teamNumber": redTeam3
+                                            }, 
+                                            { 
+                                                "station": "Blue1",  
+                                                "teamNumber": blueTeam1
+                                            }, 
+                                            { 
+                                                "station": "Blue2",  
+                                                "teamNumber": blueTeam2
+                                            }, 
+                                            { 
+                                                "station": "Blue3",  
+                                                "teamNumber": blueTeam3
+                                            }
+                                        ], 
+                                        "tournamentLevel": "Qualification"
+                    }
+                    # If the match already exists, simply append it instead of adding it again
+                    qualDataMatches = False
+                    for match in qualScheduleData:
+                        if match["description"] == matchtitle:
+                            qualDataMatches = True
+                            tempmatchnum = match["matchNumber"]
+                            match = tempMatchEntrySchedule
+                            for matchScore in qualScoreData:
+                                if tempmatchnum == matchScore["matchNumber"]:
+                                    tempMatchEntryScore['matchNumber'] = tempmatchnum
+                                    match = tempMatchEntryScore
+                    if qualDataMatches == False:
+                        # If it doesn't find the entry, add them to the end
+                        qualScoreData.insert(len(qualScoreData), tempMatchEntryScore)
+                        qualScheduleData.insert(len(qualScheduleData), tempMatchEntrySchedule)
+                    # Update the JSON files             
+                    with open('manual/manualqualscheduledata.json', 'w') as json_file:
+                        json.dump(qualScheduleData, json_file)
+                    with open('manual/manualqualscoredata.json', 'w') as json_file:
+                        json.dump(qualScoreData, json_file)
+                else:
+                    with open('manual/manualplayoffscheduledata.json') as json_file:
+                        playoffScheduleData = json.load(json_file)
+                    with open('manual/manualplayoffscoredata.json') as json_file:
+                        playoffScoreData = json.load(json_file)
+                    # Sets the match number
+                    if len(playoffScoreData) == 0:
+                        matchNum = qualScoreData[-1]["matchNumber"] + 1
+                    else:
+                        matchNum = playoffScoreData[-1]["matchNumber"] + 1
+                    tempMatchEntryScore = {
+                                    "alliances": [
+                                        {
+                                            "alliance": "Blue",
+                                            "autoCellsBottom": 0,
+                                            "autoCellsOuter": 0,
+                                            "autoCellsInner": 0,
+                                            "teleopCellsBottom": 0,
+                                            "teleopCellsOuter": 0,
+                                            "teleopCellsInner": 0,
+                                            "endgameRungIsLevel": blueSwitchLevel,
+                                            "autoInitLinePoints": 0,
+                                            "autoCellPoints": 0,
+                                            "autoPoints": 0,
+                                            "teleopCellPoints": 0,
+                                            "controlPanelPoints": 0,
+                                            "endgamePoints": 0,
+                                            "teleopPoints": "69",
+                                            "shieldOperationalRankingPoint":"False",
+                                            "shieldEnergizedRankingPoint":"False",
+                                            "foulCount":"0",
+                                            "techFoulCount":"0",
+                                            "adjustPoints":"0",
+                                            "foulPoints":"0",
+                                            "rp":blueRankingPoints,
+                                            "totalPoints": blueFinalScore
+                                        }, 
+                                        {
+                                            "alliance": "Red",
+                                            "autoCellsBottom": 0,
+                                            "autoCellsOuter": 0,
+                                            "autoCellsInner": 0,
+                                            "teleopCellsBottom": 0,
+                                            "teleopCellsOuter": 0,
+                                            "teleopCellsInner": 0,
+                                            "endgameRungIsLevel": redSwitchLevel,
+                                            "autoInitLinePoints": 0,
+                                            "autoCellPoints": 0,
+                                            "autoPoints": 0,
+                                            "teleopCellPoints": 0,
+                                            "controlPanelPoints": 0,
+                                            "endgamePoints": 0,
+                                            "teleopPoints": "69",
+                                            "shieldOperationalRankingPoint":"False",
+                                            "shieldEnergizedRankingPoint":"False",
+                                            "foulCount":"0",
+                                            "techFoulCount":"0",
+                                            "adjustPoints":"0",
+                                            "foulPoints":"0",
+                                            "rp":redRankingPoints,
+                                            "totalPoints": redFinalScore
+                                        }
+                                    ], 
+                                    "matchLevel": "Playoff", 
+                                    "matchNumber": matchNum
+                                    }
+                    tempMatchEntrySchedule = {
+                                        "description": matchtitle, 
+                                        "matchNumber": matchNum, 
+                                        "postResultTime": postResultTime, 
+                                        "scoreBlueAuto": 0, 
+                                        "scoreBlueFinal": blueFinalScore, 
+                                        "scoreBlueFoul": 0, 
+                                        "scoreRedAuto": 0, 
+                                        "scoreRedFinal": redFinalScore, 
+                                        "scoreRedFoul": 0, 
+                                        "startTime": matchtime, 
+                                        "teams": [
+                                            { 
+                                                "station": "Red1",  
+                                                "teamNumber": redTeam1
+                                            }, 
+                                            { 
+                                                "station": "Red2",  
+                                                "teamNumber": redTeam2
+                                            }, 
+                                            { 
+                                                "station": "Red3",  
+                                                "teamNumber": redTeam3
+                                            }, 
+                                            { 
+                                                "station": "Blue1",  
+                                                "teamNumber": blueTeam1
+                                            }, 
+                                            { 
+                                                "station": "Blue2",  
+                                                "teamNumber": blueTeam2
+                                            }, 
+                                            { 
+                                                "station": "Blue3",  
+                                                "teamNumber": blueTeam3
+                                            }
+                                        ], 
+                                        "tournamentLevel": "Playoff"
+                    }
+                    # If the match already exists, simply append it instead of adding it again
+                    playoffDataMatches = False
+                    for match in playoffScheduleData:
+                        if match["description"] == matchtitle:
+                            playoffDataMatches = True
+                            tempmatchnum = match["matchNumber"]
+                            match = tempMatchEntrySchedule
+                            for matchScore in playoffScoreData:
+                                if tempmatchnum == matchScore["matchNumber"]:
+                                    tempMatchEntryScore['matchNumber'] = tempmatchnum
+                                    match = tempMatchEntryScore
+                    if playoffDataMatches == False:
+                        # If it doesn't find the entry, add them to the end
+                        playoffScoreData.insert(len(qualScoreData), tempMatchEntryScore)
+                        playoffScheduleData.insert(len(qualScheduleData), tempMatchEntrySchedule)
+                    # Update the JSON files
+                    with open('manual/manualplayoffscheduledata.json', 'w') as json_file:
+                        json.dump(playoffScheduleData, json_file)
+                    with open('manual/manualplayoffscoredata.json', 'w') as json_file:
+                        json.dump(playoffScoreData, json_file)
+            # Add the event data if its not blank
+            if eventvenue != "" and eventname != "":
+                tempEvent = {
+                    "name": eventname, 
+                    "venue": eventvenue, 
+                }
+                with open('manual/manualeventdata.json', 'w') as json_file:
+                    json.dump(tempEvent, json_file)
+            # Add the team data if its not blank
+            if teamname != "" and teamnumber != "":
+                with open('manual/manualteamdata.json') as json_file:
+                    teamData = json.load(json_file)
+                tempTeam = {
+                    "nameShort": teamname, 
+                    "teamNumber": int(teamnumber), 
+                }
+                teamData.insert(len(teamData), tempTeam)
+                with open('manual/manualteamdata.json', 'w') as json_file:
+                    json.dump(teamData, json_file)
+            # Wipes the manual data screen
+            csqp.updateCellValue(5, 5, "")
+            csqp.updateCellValue(2, 2, "")
+            csqp.updateCellValue(2, 4, "")
+            csqp.updateCellValue(2, 5, "")
+            csqp.updateCellValue(2, 6, "")
+            csqp.updateCellValue(2, 7, "")
+            csqp.updateCellValue(2, 8, "")
+            csqp.updateCellValue(2, 9, "")
+            csqp.updateCellValue(3, 4, "")
+            csqp.updateCellValue(3, 5, "")
+            csqp.updateCellValue(3, 6, "")
+            csqp.updateCellValue(3, 7, "")
+            csqp.updateCellValue(3, 8, "")
+            csqp.updateCellValue(3, 9, "")
+            csqp.updateCellValue(5, 3, "")
+            csqp.updateCellValue(5, 4, "")
+            csqp.updateCellValue(5, 7, "")
+            csqp.updateCellValue(5, 8, "")
+            csqp.pushCellUpdate()
     
     def createSheet(self):
         # Creates the worksheet
@@ -92,39 +430,69 @@ class Sheets:
         temp_x = match.o_x + x - 1
         temp_y = match.o_y + y - 1
         return gspread.utils.rowcol_to_a1(temp_y, temp_x)
-        
+    
+    def checkIfMatchExists(self, matchToCheck):
+        for match in self.matchList:
+            if match.matchtitle == matchToCheck.matchtitle:
+                return True
+        return False
+
+    def updateMatchIfChanged(self, matchToCheck):
+        for match in self.matchList:
+            # Finds the match
+            if match.matchtitle == matchToCheck.matchtitle:
+                # Checks if the data has been changed
+                if matchToCheck.schedule["postResultTime"] != match.schedule["postResultTime"]:
+                    # Stores the notes so they don't get deleted, swaps the match with the new updated one, and puts the notes back
+                    tempNotes = match.notes
+                    match = matchToCheck
+                    match.notes = tempNotes
+                    return True
+        return False
+
     def createMatchObjects(self):
         # Creates lists to store the qualifier and playoff matches
         self.matchList = []
 
-        # Temporary Location Storage for creating origins
-        templocationholdy = 0
-
         # Qualifier Match Object Creation
         for x in range(len(self.data.qualScheduleData)):
             tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
-            if (x == 0):
-                tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth row
-                templocationholdy = 4
+            if self.checkIfMatchExists(tempMatch) == False:
+                if (x == 0):
+                    tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth row
+                else:
+                    tempMatch.o_y = self.matchList[-1].o_y + 18
+                # Creates the entry in sheets
+                # Updates the Mitch Score of the teams involved in the match if it's happened
+                if tempMatch.matchhappened:
+                    tempMatch.updateTeamScores(self.teamDict)
+                print ("Match Entry Created: ", tempMatch.matchtitle)
+                self.matchList.insert(len(self.matchList), tempMatch)
             else:
-                templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
-                tempMatch.o_y = templocationholdy
-            # Creates the entry in sheets
-            # Updates the Mitch Score of the teams involved in the match
-            tempMatch.updateTeamScores(self.teamDict)
-            print ("Match Entry Created: ", tempMatch.matchtitle)
-            self.matchList.insert(len(self.matchList), tempMatch)
+                # If the match does exist, make sure it hasn't changed
+                # If it has, update it to the new data
+                self.updateMatchIfChanged(tempMatch)
 
         # Playoff Match Object Creation
         for x in range(len(self.data.playoffScheduleData)):
             tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
-            templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
-            tempMatch.o_y = templocationholdy 
-            # Creates the entry's in sheets
-            if tempMatch.matchhappened:
-                tempMatch.updateTeamScores(self.teamDict)
-            print ("Match Entry Created: ", tempMatch.matchtitle)
-            self.matchList.insert(len(self.matchList), tempMatch)
+            if self.checkIfMatchExists(tempMatch) == False:
+                # In case for some reason theres no qualifier matches, set the origin to 4
+                if len(self.data.qualScheduleData) == 0:
+                    tempMatch.o_y = 4
+                else:
+                    tempMatch.o_y = self.matchList[-1].o_y + 18
+                # Creates the entry in sheets
+                # Updates the Mitch Score of the teams involved in the match if it's happened
+                if tempMatch.matchhappened:
+                    tempMatch.updateTeamScores(self.teamDict)
+                print ("Match Entry Created: ", tempMatch.matchtitle)
+                self.matchList.insert(len(self.matchList), tempMatch)
+            else:
+                # If the match does exist, make sure it hasn't changed
+                # If it has, update it to the new data
+                self.updateMatchIfChanged(tempMatch)
+        # Creates a seperate list of matches that are filtered to the config settings
         self.filterMatches()
         
     def filterMatches(self):
@@ -133,6 +501,15 @@ class Sheets:
         teamFilter = []
         if (self.config.matchteamfilter != "ALL" and self.config.matchteamfilter != ""):
             teamFilter = self.config.matchteamfilter.split(',')
+            for team in teamFilter: 
+                try:
+                    intnum = int(team)
+                    team = intnum
+                except:
+                    # Sets the team filter to blank so it doesnt crash the program
+                    teamFilter = []
+                    print("Invalid text in teamfilter: %s" % team)
+                    break
         for match in self.matchList:
             # Conditionals on whether the match should be added to the list or not
             teamMatchFilter = False
@@ -146,11 +523,11 @@ class Sheets:
                 # Otherwise, make sure the team is in this match
                 for team in match.redTeamList:
                     for teamnum in teamFilter:
-                        if team.number == teamnum:
+                        if int(team) == int(teamnum):
                             teamMatchFilter = True
                 for team in match.blueTeamList:
                     for teamnum in teamFilter:
-                        if team.number == teamnum:
+                        if int(team) == int(teamnum):
                             teamMatchFilter = True
             # Unplayed Matches Filter
             if (self.config.displayunplayedmatches == "TRUE"):
@@ -171,15 +548,11 @@ class Sheets:
             # Add the match if all 3 qualifiers are met
             if teamMatchFilter and unplayedMatchFilter and qualifierMatchFilter:
                 self.filteredMatchList.insert(len(self.filteredMatchList), match)
-            # Resets the origins so that they are underneath each other
-            templocationholdy = 0
-            for x in range(len(self.filteredMatchList)):
-                if x == 0:
-                    self.filteredMatchList[x].o_y = 4 # If it's the very first match, set the origin to the fourth row
-                    templocationholdy = 4
-                else:
-                    templocationholdy += 18 # 18 is how many rows needs to be added to the location of the name of an entry to have a spot for a new entry
-                    self.filteredMatchList[x].o_y = templocationholdy
+        # Resets the origins so that they are underneath each other
+        posCounter = 4
+        for match in self.filteredMatchList:
+            match.o_y = posCounter # If it's the very first match, set the origin to the fourth row
+            posCounter += 18
 
     def grabNotes(self, csqp):
         # Goes through the currently displayed matches and grabs their notes so they don't get wiped
@@ -187,29 +560,30 @@ class Sheets:
             csqp.updateOrigin(1, x)
             for match in self.matchList:
                 if match.matchtitle == csqp.readCell(1, 1):
-                    match.notes = csqp.readCell(1, 18)
+                    match.notes = csqp.readCell(1, 15)
 
     def nukeMatchEntries(self):
         # Deletes all of the match entries, used for filters
-        grabXLimit = (len(self.matchList) * 18) + 2
-        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 6, grabXLimit)
+        grabYLimit = (len(self.matchList) * 18) + 2
+        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabYLimit)
 
         # Makes sure the notes don't get deleted
         self.grabNotes(csqp)
 
         # Deletes all of the entries
-        csqp.nuke()
+        csqp.updateCellRangeFormatting(1, 1, 6, grabYLimit - 2, self.nuke_format)
+        csqp.updateCustomCellFormatting(1, 1, 6, grabYLimit - 2, "unmerge")
+        csqp.nukeValues()
 
         # Pushes the nuke to the sheet
         csqp.pushCellUpdate()
 
     def createMatchEntries(self):
-        # @param nuke - gets rid of all values within the CSQP, used for filters
         ### Creates all of the match entries
         
         ## Compressed Sheets Query Protocol Setup
         grabXLimit = (len(self.matchList) * 18) + 2
-        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 6, grabXLimit)
+        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabXLimit)
 
         # Makes sure the notes don't get deleted
         self.grabNotes(csqp)
@@ -349,7 +723,10 @@ class Sheets:
                 csqp.updateCellValue(5, 5, self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating)
                 tempredteam_avmr = (self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating) / 3
                 csqp.updateCellValue(5, 6, tempredteam_avmr)
-                tempredteam_avscr = (((self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].matchesPlayed)) // 3)
+                if self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].matchesPlayed != 0 and self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].matchesPlayed != 0 and self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].matchesPlayed != 0:
+                    tempredteam_avscr = (((self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].matchesPlayed)) // 3)
+                else:
+                    tempredteam_avscr = 0
                 csqp.updateCellValue(5, 7, tempredteam_avscr)
                 # Blue Team
                 csqp.updateCellValue(6, 3, self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].mitchrating)
@@ -357,7 +734,10 @@ class Sheets:
                 csqp.updateCellValue(6, 5, self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].mitchrating)
                 tempblueteam_avmr = ((self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].mitchrating) // 3)
                 csqp.updateCellValue(6, 6, tempblueteam_avmr)
-                tempblueteam_avscr = (((self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].matchesPlayed)) // 3)
+                if self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].matchesPlayed != 0 and self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].matchesPlayed != 0 and self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].matchesPlayed != 0:
+                    tempblueteam_avscr = (((self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][3]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][4]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][5]["teamNumber"])].matchesPlayed)) // 3)
+                else:
+                    tempblueteam_avscr = 0
                 csqp.updateCellValue(6, 7, tempblueteam_avscr)
             
             ### Team Setup ###
@@ -453,7 +833,7 @@ class Sheets:
             self.teamDict[str(tempTeam.number)] = tempTeam
 
     def createTeamEntry(self):
-        csqp = UCSQP(self.ws, self.sh, 8, 4, 15, (5 + len(self.teamDict)))
+        csqp = UCSQP(self.ws, self.sh, 8, 4, 14, (5 + len(self.teamDict)))
         # Checks to see if the match entry is already there
         alreadyExists = csqp.readCell(1, 1) == "Team List"
         # Takes all the team entries and stores their notes, robot weight and robot height so they don't get wiped
@@ -465,6 +845,7 @@ class Sheets:
                 self.teamDict[teamNum].robotWeight = csqp.readCell(6, x)
                 self.teamDict[teamNum].notes = csqp.readCell(7, x)
 
+        # Team Entry Creation
         limit = len(self.teamDict) + 2 # +2 adds space for the title and column names
         # Only creates the table and formatting if the entry isn't there
         if not alreadyExists:
@@ -519,8 +900,8 @@ class Sheets:
                 posCounter += 1
                 sortedTeamList.insert(len(sortedTeamList), team)
         else:
-            # If it's not enabled in config, don't sort the teams
-            for team in self.teamDict.values():
+            # If it's not enabled in config, sort the teams by teamnumber
+            for team in (sorted(self.teamDict.values(), key=operator.attrgetter('number'))):
                 team.o_y = posCounter
                 posCounter += 1
                 sortedTeamList.insert(len(sortedTeamList), team)
@@ -570,8 +951,8 @@ class UCSQP:
         # Finds the cell in the cell list and updates the value
         try:
             self.findCell(tempcell).value = cellvalue
-        except Exception:
-            self.findCell(tempcell).value = ""
+        except Exception as e:
+            print("Could Not Find Cell: " + str(e))
             
     def convertLocal(self, x, y):
         # Calculate pos based on origin and converts to A1
@@ -623,6 +1004,24 @@ class UCSQP:
                             }
                         }
             self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
+        elif (requesttype == "unmerge"):
+            # Does a merge all on the range of cells, used for notes section on the sheet
+            temp_x1 = self.convertX(x1) - 1
+            temp_y1 = self.convertY(y1) - 1
+            temp_x2 = self.convertX(x2)
+            temp_y2 = self.convertY(y2)
+            temprequest = {
+                            "unmergeCells": {
+                                "range": {
+                                    "sheetId": self.ws._properties['sheetId'],
+                                    "startRowIndex": temp_y1,
+                                    "endRowIndex": temp_y2,
+                                    "startColumnIndex": temp_x1,
+                                    "endColumnIndex": temp_x2
+                                } 
+                            }
+                        }
+            self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
         elif (requesttype == "resizecolumn"):
             # Resizes the column to the given size, must use @param columnsize
             columnsizeparam = columnsize
@@ -647,13 +1046,13 @@ class UCSQP:
     def readCell(self, x, y):
         tempcell = self.convertLocal(x, y)
         # Finds the cell in the cell list and returns the value
-        return self.findCell(tempcell).value
+        try:
+            return self.findCell(tempcell).value
+        except Exception as e:
+            print("Could Not Find Cell: " + str(e))
 
-    def nuke(self):
-        # Deletes every value and formatting of all the cells in the sheet
-        # For the love of Jah be careful when using this
-
-        # Does a custom request to remove all formatting off of the cells
+    def nukeValues(self):
+        # Sets the values and formatting of all the cells to blank
         temprequest = {
                         "updateCells": {
                             "range": {
@@ -667,8 +1066,7 @@ class UCSQP:
                         }
                     }
         self.custom_requests["requests"].insert(len(self.custom_requests), temprequest)
-
-        # Sets the values of all the cells to blank
+        # Value Clearing
         for cell in self.cell_list:
             cell.value = ""
 
@@ -691,8 +1089,4 @@ class UCSQP:
         # Pushes the cell value list to the google sheet
         if not (len(self.cell_list) == 0):
             self.ws.update_cells(self.cell_list)
-
-
-
-
 
