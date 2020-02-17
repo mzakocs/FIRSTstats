@@ -31,8 +31,11 @@
 ############################################################################################################################
 
 # TODO: Eventually update rating system to GLICKO 2
-# TODO: Create checks to make sure config input is valid and doesn't crash the service, especially match codes and seasons
-# TODO: Fix display of points
+# TODO: Code unit tests eventually
+# TODO: Add a table on the home screen or another page that has a global list of teams with global MitchRatings for the 2020 season,
+# would be either only matches that we have analyzed orrrr maybe all matches for 2020?
+# TODO: Add predictions for whether or not the robot has a functional auto phase and whether
+# or not it has a functional hanging thing
 
 import requests
 import json
