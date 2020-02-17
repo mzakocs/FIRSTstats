@@ -1,7 +1,8 @@
 ############################################################################################################################
 # FirstPredictions                                                                                                         #
 # Used to rank teams and predict matches                                                                                   #
-# Also used to track matches and teams                                                                                     #                                                                                     #
+# Also used to track matches and teams                                                                                     #
+# If the ranking system isn't working, make sure you're using Python 3.8.1                                                 #                                                                                     #
 ############################################################################################################################
 
 import math
@@ -128,8 +129,8 @@ class Team:
     ## Uses an implementation of the GLICKO Rating system to rank teams
     # http://www.glicko.net/glicko.html
     # Rating deviation is almost like standard deviation, it shows how consistent the team is or if they are just getting carried
-    _c = 1
-    _q = 0.0057565
+    _c = 7.95
+    _q = 0.00975646273 # ln(10)/400
 
     def __init__(self, teamdict):
         # Class Imports
@@ -144,7 +145,7 @@ class Team:
         self.robotType = ""
         self.robotWeight = ""
         # Predictions Data
-        self.mitchrating = 1500
+        self.mitchrating = 2000
         self.ratingdeviation = 350
         self.totalScore = 0
         self.matchesPlayed = 0
@@ -199,5 +200,67 @@ class Team:
         self.mitchrating = round(s_new_mitchrating)
         self.ratingdeviation = round(s_new_ratingdeviation)
     
-    def getRankTitle(self):
-        pass
+    def getRankTitle(self, max, min):
+        # Returns a function to display the corresponding CSGO rank for the MitchRating
+        # Implemented on the request of Angel Heredia
+        # Can be removed, has literally no purpose other than looking nice
+        i = range(min, max, round((max-min)/17))
+        # Silver 1
+        if self.mitchrating <= i[0]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/1.png", 4, 20, 50)'
+        # Silver 2
+        elif i[0] < self.mitchrating <= i[1]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/2.png", 4, 20, 50)'
+        # Silver 3
+        elif i[1] < self.mitchrating <= i[2]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/3.png", 4, 20, 50)'
+        # Silver 4
+        elif i[2] < self.mitchrating <= i[3]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/4.png", 4, 20, 50)'
+        # Silver Elite
+        elif i[3] < self.mitchrating <= i[4]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/5.png", 4, 20, 50)'
+        # Silver Elite Master
+        elif i[4] < self.mitchrating <= i[5]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/6.png", 4, 20, 50)'
+        # Gold Nova 1
+        elif i[5] < self.mitchrating <= i[6]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/7.png", 4, 20, 50)'
+        # Gold Nova 2
+        elif i[6] < self.mitchrating <= i[7]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/8.png", 4, 20, 50)'
+        # Gold Nova 3
+        elif i[7] < self.mitchrating <= i[8]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/9.png", 4, 20, 50)'
+        # Gold Nova Master
+        elif i[8] < self.mitchrating <= i[9]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/10.png", 4, 20, 50)'
+        # Master Guard
+        elif i[9] < self.mitchrating <= i[10]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/11.png", 4, 20, 50)'
+        # Master Guard 2
+        elif i[10] < self.mitchrating <= i[11]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/12.png", 4, 20, 50)'
+        # Master Guard Elite
+        elif i[11] < self.mitchrating <= i[12]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/13.png", 4, 20, 50)'
+        # Distinguished Master Guard
+        elif i[12] < self.mitchrating <= i[13]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/14.png", 4, 20, 50)'
+        # Legendary Eagle
+        elif i[13] < self.mitchrating <= i[14]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/15.png", 4, 20, 50)'
+        # Legendary Eagle Master
+        elif i[14] < self.mitchrating <= i[15]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/16.png", 4, 20, 50)'
+        # Supreme Master First Class
+        elif i[15] < self.mitchrating <= i[16]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/17.png", 4, 20, 50)'
+        # Global Elite
+        elif self.mitchrating > i[16]:
+            return '=IMAGE("https://csgo-stats.com/custom/img/ranks/18.png", 4, 20, 50)'
+        # Theoretically should never happen but who tf knows
+        else:
+            return '=IMAGE("https://ih1.redbubble.net/image.792313560.3852/flat,550x550,075,f.u2.jpg")'
+            print("Rank Title Not Found!")
+

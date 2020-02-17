@@ -20,6 +20,9 @@ class Sheets:
         self.config = config
         self.data = data
 
+        # Creates lists to store the qualifier and playoff matches
+        self.matchList = []
+
         # Google Drive OAuth2 Setup
         # gspread.readthedocs.io/en/latest/
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -67,13 +70,35 @@ class Sheets:
         found = False
         worksheetsList = self.sh.worksheets()
         for worksheet in worksheetsList:
-            if worksheet._properties['title'] == str(self.config.eventid):
+            if worksheet._properties['title'].upper() == str(self.config.eventid).upper():
                 found = True
-                self.ws = self.sh.worksheet(str(self.config.eventid))
+                self.ws = self.sh.worksheet(str(self.config.eventid).upper())
         return found
+
+    def createSheet(self):
+        # Creates the worksheet
+        self.ws = self.sh.add_worksheet(title=str(self.config.eventid).upper(), rows="3000", cols="30")
+        # Creates a CSQP object to setup the worksheet
+        csqp = UCSQP(self.ws, self.sh, 1, 1, 2, 30)
+        # Creates formatting for the title and competition location
+        csqp.updateCellFormatting(1, 1, self.title_format)
+        csqp.updateCellFormatting(1, 2, self.venue_format)
+        # Adds the event info into the first 2 rows
+        csqp.updateCellValue(1, 1, self.data.eventData["name"])
+        csqp.updateCellValue(1, 2, self.data.eventData["venue"])
+        # Setting the cell size to 136 for all cells
+        csqp.updateCustomCellFormatting(1, 0 , 30, 0, "resizecolumn")
+        # Changing the font for all cells
+        csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
+        csqp.pushCellUpdate()
+        print("Worksheet Created: " + str(self.config.eventid))
     
     def checkManualEntry(self):
         # Function for checking data if manual data retrieval is on
+        # Currently not in use. If you want to use this, the function
+        # is already setup in the main loop but it's not going to work
+        # The manual data input box is in the Templates section on the home page
+        # Simply put the top left corner at 1, 21 and have fun getting it to work properly
         csqp = UCSQP(self.config_ws, self.sh, 1, 21, 5, 29)
         update = csqp.readCell(5, 5)
         if update != "":
@@ -406,24 +431,6 @@ class Sheets:
             csqp.updateCellValue(5, 7, "")
             csqp.updateCellValue(5, 8, "")
             csqp.pushCellUpdate()
-    
-    def createSheet(self):
-        # Creates the worksheet
-        self.ws = self.sh.add_worksheet(title=str(self.config.eventid), rows="3000", cols="30")
-        # Creates a CSQP object to setup the worksheet
-        csqp = UCSQP(self.ws, self.sh, 1, 1, 2, 30)
-        # Creates formatting for the title and competition location
-        csqp.updateCellFormatting(1, 1, self.title_format)
-        csqp.updateCellFormatting(1, 2, self.venue_format)
-        # Adds the event info into the first 2 rows
-        csqp.updateCellValue(1, 1, self.data.eventData["name"])
-        csqp.updateCellValue(1, 2, self.data.eventData["venue"])
-        # Setting the cell size to 136 for all cells
-        csqp.updateCustomCellFormatting(1, 0 , 30, 0, "resizecolumn")
-        # Changing the font for all cells
-        csqp.updateCellRangeFormatting(1, 1, 30, 3000, self.font_format)
-        csqp.pushCellUpdate()
-        print("Worksheet Created: " + str(self.config.eventid))
 
     def convertLocal(self, x, y, match):
         # Calculate pos based on origin and converts to A1
@@ -444,16 +451,15 @@ class Sheets:
                 # Checks if the data has been changed
                 if matchToCheck.schedule["postResultTime"] != match.schedule["postResultTime"]:
                     # Stores the notes so they don't get deleted, swaps the match with the new updated one, and puts the notes back
-                    tempNotes = match.notes
+                    matchToCheck.notes = match.notes
                     match = matchToCheck
-                    match.notes = tempNotes
                     return True
         return False
 
-    def createMatchObjects(self):
-        # Creates lists to store the qualifier and playoff matches
-        self.matchList = []
-
+    def createMatchObjects(self, wipeList = False):
+        # Wipes the list if it's a new event being evaluated
+        if wipeList == True:
+            self.matchList = []
         # Qualifier Match Object Creation
         for x in range(len(self.data.qualScheduleData)):
             tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
@@ -466,7 +472,7 @@ class Sheets:
                 # Updates the Mitch Score of the teams involved in the match if it's happened
                 if tempMatch.matchhappened:
                     tempMatch.updateTeamScores(self.teamDict)
-                print ("Match Entry Created: ", tempMatch.matchtitle)
+                print ("Match Object Created: ", tempMatch.matchtitle)
                 self.matchList.insert(len(self.matchList), tempMatch)
             else:
                 # If the match does exist, make sure it hasn't changed
@@ -578,14 +584,15 @@ class Sheets:
         # Pushes the nuke to the sheet
         csqp.pushCellUpdate()
 
-    def createMatchEntries(self):
+    def createMatchEntries(self, noNotes = False):
         ### Creates all of the match entries
         ## Compressed Sheets Query Protocol Setup
         grabXLimit = (len(self.matchList) * 18) + 2
         csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabXLimit)
 
         # Makes sure the notes don't get deleted
-        self.grabNotes(csqp)
+        if noNotes == False:
+            self.grabNotes(csqp)
 
         # Sets the filters
         self.filterMatches()
@@ -626,7 +633,7 @@ class Sheets:
             csqp.updateCellValue(2, 5, match.schedule["teams"][2]["teamNumber"]) # Red
             csqp.updateCellValue(3, 5, match.schedule["teams"][5]["teamNumber"]) # Blue
             
-            if self.config.season == 2020:
+            if self.config.season == '2020':
                 csqp.updateCellValue(1, 6, "Switch Level")
                 if not(match.score["alliances"][1]["endgameRungIsLevel"] == "null"):
                     csqp.updateCellValue(2, 6, (match.score["alliances"][1]["endgameRungIsLevel"] == "IsLevel")) # Red
@@ -647,7 +654,7 @@ class Sheets:
             csqp.updateCellValue(4, 6, "Alliance Av. MR")
             csqp.updateCellValue(4, 7, "Score Prediction")
 
-            if self.config.season == 2020:
+            if self.config.season == '2020':
                 ## Auto Score
                 csqp.updateCellValue(1, 9, ("Inner " + u"\u25CF"))
                 csqp.updateCellValue(2, 9, match.score["alliances"][1]["autoCellsInner"]) # Red
@@ -724,7 +731,7 @@ class Sheets:
                 csqp.updateCellValue(5, 3, self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].mitchrating)
                 csqp.updateCellValue(5, 4, self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].mitchrating)
                 csqp.updateCellValue(5, 5, self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating)
-                tempredteam_avmr = (self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating) / 3
+                tempredteam_avmr = ((self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].mitchrating + self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].mitchrating) // 3)
                 csqp.updateCellValue(5, 6, tempredteam_avmr)
                 if self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].matchesPlayed != 0 and self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].matchesPlayed != 0 and self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].matchesPlayed != 0:
                     tempredteam_avscr = (((self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][0]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][1]["teamNumber"])].matchesPlayed) + (self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].totalScore // self.teamDict[str(match.schedule["teams"][2]["teamNumber"])].matchesPlayed)) // 3)
@@ -836,13 +843,13 @@ class Sheets:
             print ("Team Entry Created: %s" % tempTeam.name)
             self.teamDict[str(tempTeam.number)] = tempTeam
 
-    def createTeamEntry(self):
+    def createTeamEntry(self, noNotes = False):
         csqp = UCSQP(self.ws, self.sh, 8, 4, 14, (5 + len(self.teamDict)))
         # Checks to see if the match entry is already there
         alreadyExists = csqp.readCell(1, 1) == "Team List"
         # Takes all the team entries and stores their notes, robot weight and robot height so they don't get wiped
         # Only happens if the list already exists
-        if alreadyExists:
+        if alreadyExists and noNotes == False:
             for x in range(3, (3 + len(self.teamDict))):
                 teamNum = str(csqp.readCell(2, x))
                 self.teamDict[teamNum].robotType = csqp.readCell(5, x)
@@ -859,6 +866,7 @@ class Sheets:
             # Centered Values
             csqp.updateCellRangeFormatting(1, 2, 7, 2, self.centered_format)
             csqp.updateCellRangeFormatting(3, 3, 3, limit, self.centered_format)
+            csqp.updateCellRangeFormatting(4, 3, 4, limit, self.centered_format)
             # Columns
             csqp.updateCellValue(1, 2, "Team Name")
             csqp.updateCellValue(2, 2, "Team Number")
@@ -909,12 +917,15 @@ class Sheets:
                 team.o_y = posCounter
                 posCounter += 1
                 sortedTeamList.insert(len(sortedTeamList), team)
+        # Gets minimum and maximum mitchrankings
+        maxMR = (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True))[0].mitchrating
+        minMR = (sorted(self.teamDict.values(), key=operator.attrgetter('mitchrating'), reverse = True))[-1].mitchrating
         # Inputting Team Data
         for value in sortedTeamList:
             csqp.updateCellValue(value.o_x, value.o_y, value.name)
             csqp.updateCellValue(value.o_x + 1, value.o_y, value.number)
             csqp.updateCellValue(value.o_x + 2, value.o_y, value.mitchrating)
-            # csqp.updateCellValue(value.o_x + 3, value.o_y, value.getRankTitle())
+            csqp.updateCellValue(value.o_x + 3, value.o_y, value.getRankTitle(maxMR, minMR))
             csqp.updateCellValue(value.o_x + 4, value.o_y, value.robotType)
             csqp.updateCellValue(value.o_x + 5, value.o_y, value.robotWeight)
             csqp.updateCellValue(value.o_x + 6, value.o_y, value.notes)
@@ -1092,5 +1103,5 @@ class UCSQP:
             self.sh.batch_update(self.custom_requests)
         # Pushes the cell value list to the google sheet
         if not (len(self.cell_list) == 0):
-            self.ws.update_cells(self.cell_list)
+            self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')
 

@@ -30,12 +30,9 @@
  #                                                 Written By: Mitch Zakocs                                               #
 ############################################################################################################################
 
-# TODO: Test out the match making filters
-    # SUB TODO: Figure out a way to delete or edit all entries to show only the filtered ones 
-# TODO: Test out the sheets config
-# TODO: Make a match checker and updater
-# TODO: Finish prediction for unplayed matches
-# TODO: Update config class to include the new playoff match customization
+# TODO: Eventually update rating system to GLICKO 2
+# TODO: Create checks to make sure config input is valid and doesn't crash the service, especially match codes and seasons
+# TODO: Fix display of points
 
 import requests
 import json
@@ -149,9 +146,25 @@ class MatchData:
         self.getScheduleData()
         # Checks to see if any of them have changed
         if oldQualSchedule != self.qualScheduleData or oldQualScore != self.qualScoreData or oldPlayoffSchedule != self.playoffScheduleData or oldPlayoffScore != self.playoffScoreData:
+            print("Detected Change in Data from FIRST API!")
             return True
         else:
             return False
+    
+    def checkIfMatchValid(self):
+        # Checks to see if the match actually exists
+        # Used to protect against program crashing if an invalid
+        # match ID or season is entered
+        try:
+            # Attempts to get the event data
+            response = requests.get('%s/v2.0/%s/events?eventCode=%s' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            tempEventData = response.json()["Events"][0]
+            return True
+        except:
+            # If it fails then return false
+            print("Invalid Event Entered: %s" % self.config.eventid)
+            return False
+
 
 def main():
     # Config and Data Retrieval Setup
@@ -178,9 +191,12 @@ def main():
     while True:
         # Grabs the new config from the sheet
         csqp.updateList()
+        # Checks to see if the MatchID is valid
+        validMatch = data.checkIfMatchValid()
         # Checks to see if the config has changed
         configChanged = config.checkSheetsConfig(sheets.config_ws, csqp)
-        if config.powerswitch == "On":
+        if config.powerswitch == "On" and validMatch == True:
+            # Setup for manual data entry, currently not working
             if config.dataretrieval == "Manual":
                 sheets.checkManualEntry()
             # Checks to see if the data has changed at all from the stored value
@@ -188,16 +204,15 @@ def main():
             # This is in case somebody deletes the sheet without changing config
             if sheets.checkIfSheetExists() == False and configChanged != "Match":
                 sheets.createSheet()
-                sheets.createMatchEntries()
-                sheets.createTeamEntry()
+                sheets.createMatchEntries(noNotes = True) # Makes sure to not grab the notes so that it uses the stored ones
+                sheets.createTeamEntry(noNotes = True)
             # Update data, push data to sheet and create entries and new objects if match schedule or score data is different from server
-            if dataChanged == True:
+            if dataChanged == True and sheets.checkIfSheetExists() == True:
                 data.getScheduleData()
                 data.getScoreData()
                 data.getEventData()
                 data.getTeamData()
                 sheets.data = data
-                sheets.createTeamObjects()
                 sheets.createMatchObjects()
                 sheets.createMatchEntries()
                 sheets.createTeamEntry()
@@ -207,29 +222,33 @@ def main():
             # Pushes the new config to the sheets and data objects
             sheets.config = config
             data.config = config
-            if configChanged == "Match":
-                # If the sheet doesn't exist, that means the match was changed
-                # This grabs all of the new match data and sets up a new sheet for it
-                if sheets.checkIfSheetExists() == False:
-                    sheets.createSheet()
-                data.getScheduleData()
-                data.getScoreData()
-                data.getEventData()
-                data.getTeamData()
-                sheets.data = data
-                sheets.createTeamObjects()
-                sheets.createMatchObjects()
-            if configChanged == "MatchFilter":
-                # Deletes all entries to make way for the new filtered entries
-                # This is because there may be less entries now and we can't
-                # Simply write over them, there will be extra on the bottom
-                sheets.nukeMatchEntries()
-            # Creates the new Match Entries for the new filters, match or fresh data
-            if configChanged != "Power":
-                sheets.createMatchEntries()
-                sheets.createTeamEntry()
-        # Sleeps for 5 seconds before checking again
-        time.sleep(5)
+            validMatch = data.checkIfMatchValid()
+            if validMatch == True:
+                if configChanged == "Match":
+                    # If the sheet doesn't exist, that means the match was changed
+                    # This grabs all of the new match data and sets up a new sheet for it
+                    data.getScheduleData()
+                    data.getScoreData()
+                    data.getEventData()
+                    data.getTeamData()
+                    sheets.data = data
+                    if sheets.checkIfSheetExists() == False:
+                        sheets.createSheet()
+                    sheets.createTeamObjects()
+                    sheets.createMatchObjects(wipeList = True)
+                if configChanged == "MatchFilter":
+                    # Deletes all entries to make way for the new filtered entries
+                    # This is because there may be less entries now and we can't
+                    # Simply write over them, there will be extra on the bottom
+                    sheets.nukeMatchEntries()
+                # Creates the new Match Entries for the new filters, match or fresh data
+                if configChanged != "Power":
+                    sheets.createMatchEntries()
+                    sheets.createTeamEntry()
+                else:
+                    print("Turning Service %s!" % config.powerswitch)
+        # Sleeps for 8 seconds before checking again
+        time.sleep(8)
 
 if __name__ == "__main__":
     main()
