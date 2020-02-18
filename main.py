@@ -126,8 +126,8 @@ def main():
                 else:
                     print("Turning Service %s!" % config.powerswitch)
         # Fix for a bug where gspread would disconnect after about an hour
-        # Recconects to the google sheets API every 59 mins
-        if(time.time() - starttime > 60 * 59):
+        # Recconects to the google sheets API every 15 mins
+        if(time.time() - starttime > 60 * 15):
             sheets.gc.login()
             starttime = time.time()
         # Sleeps for 8 seconds before checking again
