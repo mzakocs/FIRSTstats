@@ -17,6 +17,7 @@ Use with Python 3.8 and up.
 
 * main.py
     * main: Main execution loop for the sheets and class object definitions
+* firstdata.py
     * MatchData: Gets match, event and team data from the FIRST API
 * firstsheets.py
     * Sheets: Main class for uploading information, formatting,and modifying the google sheet
