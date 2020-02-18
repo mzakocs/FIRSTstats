@@ -20,6 +20,9 @@ class Sheets:
         self.config = config
         self.data = data
 
+        # GSPREAD Creds Setup
+        self.gspreadCredsSetup()
+
         # Creates lists to store the qualifier and playoff matches
         self.matchList = []
 
@@ -55,7 +58,7 @@ class Sheets:
         try:
             self.config_ws = self.sh.worksheet("Home")
         except Exception as e:
-            print (e + " sheet not found! Please create for Sheets Config Functionality")
+            print (str(e) + " sheet not found! Please create for Sheets Config Functionality")
             pass
         if self.checkIfSheetExists() == False:
             self.createSheet()
@@ -67,7 +70,7 @@ class Sheets:
         credentials = ServiceAccountCredentials.from_json_keyfile_name(self.config.oauthjsonpath, scope)
         self.gc = gspread.authorize(credentials)
         self.sh = self.gc.open_by_key(self.config.sheetid)
-        
+
     def checkIfSheetExists(self):
         found = False
         worksheetsList = self.sh.worksheets()
