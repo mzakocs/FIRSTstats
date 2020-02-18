@@ -40,6 +40,7 @@
 import firstconfig
 import firstsheets
 import firstdata
+import datetime
 import time
 
 def main():
@@ -61,17 +62,12 @@ def main():
     sheets.createTeamEntry()
 
     # Main Execution Loop
-    starttime = time.ctime()
-    print("Service started at:", starttime)
+    starttime = time.time()
+    print("Service started at:", datetime.datetime.fromtimestamp(starttime).strftime('%Y-%m-%d %H:%M:%S'))
     csqp = firstsheets.UCSQP(sheets.config_ws, sheets.sh, 4, 6, 5, 14)
     while True:
         # Grabs the new config from the sheet
         csqp.updateList()
-        # Fix for a bug where gspread would disconnect after about an hour
-        # Recconects to the google sheets API every 15 mins
-        mins = int(str(time.ctime()).split()[3].split(':')[1])
-        if (mins % 15 == 0):
-            sheets.gspreadCredsSetup()
         # Checks to see if the MatchID is valid
         validMatch = data.checkIfMatchValid()
         # Checks to see if the config has changed
@@ -129,6 +125,11 @@ def main():
                     sheets.createTeamEntry()
                 else:
                     print("Turning Service %s!" % config.powerswitch)
+        # Fix for a bug where gspread would disconnect after about an hour
+        # Recconects to the google sheets API every 59 mins
+        if(time.time() - starttime > 60 * 59):
+            sheets.gc.login()
+            starttime = time.time()
         # Sleeps for 8 seconds before checking again
         time.sleep(8)
 
