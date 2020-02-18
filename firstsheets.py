@@ -8,8 +8,8 @@
 import time
 import datetime
 import json
-import gspread
 import operator
+import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread_formatting import *
 from firstpredictions import *
@@ -950,7 +950,7 @@ class UCSQP:
     
     def findCell(self, tempcell): 
         for cell in self.cell_list:
-            if (cell.row == a1_to_rowcol(tempcell)[0] and cell.col == a1_to_rowcol(tempcell)[1]):
+            if (cell.row == gspread.utils.a1_to_rowcol(tempcell)[0] and cell.col == gspread.utils.a1_to_rowcol(tempcell)[1]):
                 return cell
         
     def updateCellValue(self, x, y, cellvalue):
