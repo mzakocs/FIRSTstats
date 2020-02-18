@@ -67,6 +67,11 @@ def main():
     while True:
         # Grabs the new config from the sheet
         csqp.updateList()
+        # Fix for a bug where gspread would disconnect after about an hour
+        # Recconects to the google sheets API every 15 mins
+        mins = int(str(time.ctime()).split()[3].split(':')[1])
+        if (mins % 15 == 0):
+            sheets.gspreadCredsSetup()
         # Checks to see if the MatchID is valid
         validMatch = data.checkIfMatchValid()
         # Checks to see if the config has changed

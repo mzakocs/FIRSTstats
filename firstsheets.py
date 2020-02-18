@@ -23,12 +23,6 @@ class Sheets:
         # Creates lists to store the qualifier and playoff matches
         self.matchList = []
 
-        # Google Drive OAuth2 Setup
-        # gspread.readthedocs.io/en/latest/
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.config.oauthjsonpath, scope)
-        self.gc = gspread.authorize(credentials)
-        self.sh = self.gc.open_by_key(self.config.sheetid)
 
         # Formatting Setup
         self.font_format = CellFormat(textFormat = TextFormat(fontFamily="Montserrat"))
@@ -66,6 +60,14 @@ class Sheets:
         if self.checkIfSheetExists() == False:
             self.createSheet()
 
+    def gspreadCredsSetup(self):
+        # Google Drive OAuth2 Setup
+        # gspread.readthedocs.io/en/latest/
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.config.oauthjsonpath, scope)
+        self.gc = gspread.authorize(credentials)
+        self.sh = self.gc.open_by_key(self.config.sheetid)
+        
     def checkIfSheetExists(self):
         found = False
         worksheetsList = self.sh.worksheets()
