@@ -80,7 +80,7 @@ class Sheets:
         # Creates the worksheet
         self.ws = self.sh.add_worksheet(title=str(self.config.eventid).upper(), rows="3000", cols="30")
         # Creates a CSQP object to setup the worksheet
-        csqp = UCSQP(self.ws, self.sh, 1, 1, 2, 30)
+        csqp = UCSQP(self, 1, 1, 2, 30)
         # Creates formatting for the title and competition location
         csqp.updateCellFormatting(1, 1, self.title_format)
         csqp.updateCellFormatting(1, 2, self.venue_format)
@@ -100,7 +100,7 @@ class Sheets:
         # is already setup in the main loop but it's not going to work
         # The manual data input box is in the Templates section on the home page
         # Simply put the top left corner at 1, 21 and have fun getting it to work properly
-        csqp = UCSQP(self.config_ws, self.sh, 1, 21, 5, 29)
+        csqp = UCSQP(self, 1, 21, 5, 29, configmode = True)
         update = csqp.readCell(5, 5)
         if update != "":
             matchNum = 1
@@ -566,7 +566,7 @@ class Sheets:
     def nukeMatchEntries(self):
         # Deletes all of the match entries, used for filters
         grabYLimit = (len(self.matchList) * 18) + 2
-        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabYLimit)
+        csqp = UCSQP(self, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabYLimit)
 
         # Makes sure the notes don't get deleted
         self.grabNotes(csqp)
@@ -575,7 +575,6 @@ class Sheets:
         csqp.updateCellRangeFormatting(1, 1, 6, grabYLimit - 2, self.nuke_format)
         csqp.updateCustomCellFormatting(1, 1, 6, grabYLimit - 2, "unmerge")
         csqp.nukeValues()
-
         # Pushes the nuke to the sheet
         csqp.pushCellUpdate()
 
@@ -583,7 +582,7 @@ class Sheets:
         ### Creates all of the match entries
         ## Compressed Sheets Query Protocol Setup
         grabXLimit = (len(self.matchList) * 18) + 2
-        csqp = UCSQP(self.ws, self.sh, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabXLimit)
+        csqp = UCSQP(self, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabXLimit)
 
         # Makes sure the notes don't get deleted
         if noNotes == False:
@@ -837,7 +836,7 @@ class Sheets:
             self.teamDict[str(tempTeam.number)] = tempTeam
 
     def createTeamEntry(self, noNotes = False):
-        csqp = UCSQP(self.ws, self.sh, 8, 4, 14, (5 + len(self.teamDict)))
+        csqp = UCSQP(self, 8, 4, 14, (5 + len(self.teamDict)))
         # Checks to see if the match entry is already there
         alreadyExists = csqp.readCell(1, 1) == "Team List"
         # Takes all the team entries and stores their notes, robot weight and robot height so they don't get wiped
@@ -933,12 +932,15 @@ class UCSQP:
     #   This system grabs the cells we need to edit, edits them locally in python,
     #   and then pushes all of the cells back to google sheets in 1 request.
     #   This is much more efficient than using 1 request to edit one cell.
-    def __init__(self, ws, sh, r_x1, r_y1, r_x2, r_y2):
+    def __init__(self, sheet, r_x1, r_y1, r_x2, r_y2, configmode = False):
         # @param ws - imports the worksheet class to be able to write to the worksheet
         # @param r - range for the section of cells to grab
         # Class Imports
-        self.ws = ws
-        self.sh = sh
+        self.sheet = sheet
+        if configmode == True:
+            self.ws = self.sheet.config_ws
+        else:
+            self.ws = self.sheet.ws
         self.o_x = r_x1
         self.o_y = r_y1
         self.o2_x = r_x2
@@ -960,6 +962,7 @@ class UCSQP:
         try:
             self.findCell(tempcell).value = cellvalue
         except Exception as e:
+            self.sheet.gc.login()
             print("Could Not Find Cell: " + str(e))
             
     def convertLocal(self, x, y):
@@ -974,6 +977,7 @@ class UCSQP:
         return temp_x
 
     def convertY(self, y):
+        # Calculate y coordinate based on origin
         temp_y = self.o_y + y - 1
         return temp_y
 
@@ -1057,6 +1061,7 @@ class UCSQP:
         try:
             return self.findCell(tempcell).value
         except Exception as e:
+            self.sheet.gc.login()
             print("Could Not Find Cell: " + str(e))
 
     def nukeValues(self):
@@ -1085,16 +1090,34 @@ class UCSQP:
     
     def updateList(self):
         # Use this when you want to re-grab the data from the sheet
-        self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(self.o_y, self.o_x), gspread.utils.rowcol_to_a1(self.o2_y, self.o2_x)))
+        try:
+            self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(self.o_y, self.o_x), gspread.utils.rowcol_to_a1(self.o2_y, self.o2_x)))
+        except Exception as e:
+            self.sheet.gc.login()
+            print ("Sheets Error! Attempting to relogin to GSPREAD... " + str(e))
 
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
         if not (len(self.cell_formatting) == 0):
-            format_cell_ranges(self.ws, self.cell_formatting)
+            try:
+                format_cell_ranges(self.ws, self.cell_formatting)
+            except:
+                self.sheet.gc.login()
+                print("Update Cell Formatting Failed!")
         # Pushes cell merge requests
         if not (len(self.custom_requests["requests"]) == 0):
-            self.sh.batch_update(self.custom_requests)
+            try:
+                self.sheet.sh.batch_update(self.custom_requests)
+            except:
+                self.sheet.gc.login()
+                print("Update Custom Formatting Failed!")
         # Pushes the cell value list to the google sheet
+        # Uses the USER_ENTERED value input option so I can use functions
+        # Only need functions for the CSGO ranks
         if not (len(self.cell_list) == 0):
-            self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')
+            try:
+                self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')
+            except:
+                self.sheet.gc.login()
+                print("Update Cell Values Failed!")
 

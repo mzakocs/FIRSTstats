@@ -64,73 +64,73 @@ def main():
     # Main Execution Loop
     starttime = time.time()
     print("Service started at:", datetime.datetime.fromtimestamp(starttime).strftime('%Y-%m-%d %H:%M:%S'))
-    csqp = firstsheets.UCSQP(sheets.config_ws, sheets.sh, 4, 6, 5, 14)
+    csqp = firstsheets.UCSQP(sheets, 4, 6, 5, 14, configmode = True)
     while True:
-        try:
-            # Grabs the new config from the sheet
-            csqp.updateList()
-            # Checks to see if the MatchID is valid
+        # try:
+        # Grabs the new config from the sheet
+        csqp.updateList()
+        # Checks to see if the MatchID is valid
+        validMatch = data.checkIfMatchValid()
+        # Checks to see if the config has changed
+        configChanged = config.checkSheetsConfig(sheets.config_ws, csqp)
+        if config.powerswitch == "On" and validMatch == True:
+            # Setup for manual data entry, currently not working
+            if config.dataretrieval == "Manual":
+                sheets.checkManualEntry()
+            # Checks to see if the data has changed at all from the stored value
+            dataChanged = data.dataChanged()
+            # This is in case somebody deletes the sheet without changing config
+            if sheets.checkIfSheetExists() == False and configChanged != "Match":
+                sheets.createSheet()
+                sheets.createMatchEntries(noNotes = True) # Makes sure to not grab the notes so that it uses the stored ones
+                sheets.createTeamEntry(noNotes = True)
+            # Update data, push data to sheet and create entries and new objects if match schedule or score data is different from server
+            if dataChanged == True and sheets.checkIfSheetExists() == True:
+                data.getScheduleData()
+                data.getScoreData()
+                data.getEventData()
+                data.getTeamData()
+                sheets.data = data
+                sheets.createMatchObjects()
+                sheets.createMatchEntries()
+                sheets.createTeamEntry()
+        # Push new config and update info if config has changed
+        if configChanged != False:
+            print("Config Change Detected!")
+            # Pushes the new config to the sheets and data objects
+            sheets.config = config
+            data.config = config
             validMatch = data.checkIfMatchValid()
-            # Checks to see if the config has changed
-            configChanged = config.checkSheetsConfig(sheets.config_ws, csqp)
-            if config.powerswitch == "On" and validMatch == True:
-                # Setup for manual data entry, currently not working
-                if config.dataretrieval == "Manual":
-                    sheets.checkManualEntry()
-                # Checks to see if the data has changed at all from the stored value
-                dataChanged = data.dataChanged()
-                # This is in case somebody deletes the sheet without changing config
-                if sheets.checkIfSheetExists() == False and configChanged != "Match":
-                    sheets.createSheet()
-                    sheets.createMatchEntries(noNotes = True) # Makes sure to not grab the notes so that it uses the stored ones
-                    sheets.createTeamEntry(noNotes = True)
-                # Update data, push data to sheet and create entries and new objects if match schedule or score data is different from server
-                if dataChanged == True and sheets.checkIfSheetExists() == True:
+            if validMatch == True:
+                if configChanged == "Match":
+                    # If the sheet doesn't exist, that means the match was changed
+                    # This grabs all of the new match data and sets up a new sheet for it
                     data.getScheduleData()
                     data.getScoreData()
                     data.getEventData()
                     data.getTeamData()
                     sheets.data = data
-                    sheets.createMatchObjects()
-                    sheets.createMatchEntries()
+                    if sheets.checkIfSheetExists() == False:
+                        sheets.createSheet()
+                    sheets.createTeamObjects()
+                    sheets.createMatchObjects(wipeList = True)
+                if configChanged == "MatchFilter":
+                    # Deletes all entries to make way for the new filtered entries
+                    # This is because there may be less entries now and we can't
+                    # Simply write over them, there will be extra on the bottom
+                    sheets.nukeMatchEntries()
+                # Creates the new Match Entries for the new filters, match or fresh data
+                if configChanged != "Power":
+                    if configChanged != "TeamFilter":
+                        sheets.createMatchEntries()
                     sheets.createTeamEntry()
-            # Push new config and update info if config has changed
-            if configChanged != False:
-                print("Config Change Detected!")
-                # Pushes the new config to the sheets and data objects
-                sheets.config = config
-                data.config = config
-                validMatch = data.checkIfMatchValid()
-                if validMatch == True:
-                    if configChanged == "Match":
-                        # If the sheet doesn't exist, that means the match was changed
-                        # This grabs all of the new match data and sets up a new sheet for it
-                        data.getScheduleData()
-                        data.getScoreData()
-                        data.getEventData()
-                        data.getTeamData()
-                        sheets.data = data
-                        if sheets.checkIfSheetExists() == False:
-                            sheets.createSheet()
-                        sheets.createTeamObjects()
-                        sheets.createMatchObjects(wipeList = True)
-                    if configChanged == "MatchFilter":
-                        # Deletes all entries to make way for the new filtered entries
-                        # This is because there may be less entries now and we can't
-                        # Simply write over them, there will be extra on the bottom
-                        sheets.nukeMatchEntries()
-                    # Creates the new Match Entries for the new filters, match or fresh data
-                    if configChanged != "Power":
-                        if configChanged != "TeamFilter":
-                            sheets.createMatchEntries()
-                        sheets.createTeamEntry()
-                    else:
-                        print("Turning Service %s!" % config.powerswitch)
-        except:
-            # If any of the functions fail, try to relogin to GSpread so it doesn't drop connection
-            print("Attempting to reconnect to Google Sheets API...")
-            sheets.gc.login()                
-            print("Done!")
+                else:
+                    print("Turning Service %s!" % config.powerswitch)
+        # except:
+        #     # If any of the functions fail, try to relogin to GSpread so it doesn't drop connection
+        #     print("Attempting to reconnect to Google Sheets API...")
+        #     sheets.gc.login()                
+        #     print("Done!")
         # Sleep for 8 seconds before checking again
         time.sleep(8)
 
