@@ -961,9 +961,8 @@ class UCSQP:
         # Finds the cell in the cell list and updates the value
         try:
             self.findCell(tempcell).value = cellvalue
-        except Exception as e:
+        except:
             self.sheet.gc.login()
-            print("Could Not Find Cell: " + str(e))
             
     def convertLocal(self, x, y):
         # Calculate pos based on origin and converts to A1
@@ -1060,9 +1059,8 @@ class UCSQP:
         # Finds the cell in the cell list and returns the value
         try:
             return self.findCell(tempcell).value
-        except Exception as e:
+        except:
             self.sheet.gc.login()
-            print("Could Not Find Cell: " + str(e))
 
     def nukeValues(self):
         # Sets the values and formatting of all the cells to blank
@@ -1092,9 +1090,8 @@ class UCSQP:
         # Use this when you want to re-grab the data from the sheet
         try:
             self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(self.o_y, self.o_x), gspread.utils.rowcol_to_a1(self.o2_y, self.o2_x)))
-        except Exception as e:
+        except:
             self.sheet.gc.login()
-            print ("Sheets Error! Attempting to relogin to GSPREAD... " + str(e))
 
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
@@ -1103,14 +1100,12 @@ class UCSQP:
                 format_cell_ranges(self.ws, self.cell_formatting)
             except:
                 self.sheet.gc.login()
-                print("Update Cell Formatting Failed!")
         # Pushes cell merge requests
         if not (len(self.custom_requests["requests"]) == 0):
             try:
                 self.sheet.sh.batch_update(self.custom_requests)
             except:
                 self.sheet.gc.login()
-                print("Update Custom Formatting Failed!")
         # Pushes the cell value list to the google sheet
         # Uses the USER_ENTERED value input option so I can use functions
         # Only need functions for the CSGO ranks
