@@ -69,16 +69,25 @@ class Sheets:
 
     def checkIfSheetExists(self):
         found = False
-        worksheetsList = self.sh.worksheets()
+        try:
+            worksheetsList = self.sh.worksheets()
+        except:
+            self.gc.login()
         for worksheet in worksheetsList:
             if worksheet._properties['title'].upper() == str(self.config.eventid).upper():
                 found = True
-                self.ws = self.sh.worksheet(str(self.config.eventid).upper())
+                try:
+                    self.ws = self.sh.worksheet(str(self.config.eventid).upper())
+                except:
+                    self.gc.login()
         return found
 
     def createSheet(self):
         # Creates the worksheet
-        self.ws = self.sh.add_worksheet(title=str(self.config.eventid).upper(), rows="3000", cols="30")
+        try:
+            self.ws = self.sh.add_worksheet(title=str(self.config.eventid).upper(), rows="3000", cols="30")
+        except:
+            self.gc.login()
         # Creates a CSQP object to setup the worksheet
         csqp = UCSQP(self, 1, 1, 2, 30)
         # Creates formatting for the title and competition location
@@ -1114,5 +1123,4 @@ class UCSQP:
                 self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')
             except:
                 self.sheet.gc.login()
-                print("Update Cell Values Failed!")
 
