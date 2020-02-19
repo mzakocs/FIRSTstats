@@ -66,7 +66,6 @@ def main():
     print("Service started at:", datetime.datetime.fromtimestamp(starttime).strftime('%Y-%m-%d %H:%M:%S'))
     csqp = firstsheets.UCSQP(sheets, 4, 6, 5, 14, configmode = True)
     while True:
-        # try:
         # Grabs the new config from the sheet
         csqp.updateList()
         # Checks to see if the MatchID is valid
@@ -126,13 +125,8 @@ def main():
                     sheets.createTeamEntry()
                 else:
                     print("Turning Service %s!" % config.powerswitch)
-        # except:
-        #     # If any of the functions fail, try to relogin to GSpread so it doesn't drop connection
-        #     print("Attempting to reconnect to Google Sheets API...")
-        #     sheets.gc.login()                
-        #     print("Done!")
-        # Sleep for 8 seconds before checking again
-        time.sleep(8)
+        # Sleep for 5 seconds before checking again
+        time.sleep(5)
 
 if __name__ == "__main__":
     main()
