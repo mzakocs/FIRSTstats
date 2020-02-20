@@ -128,11 +128,10 @@ class MatchData:
             # The response from an invalid match ID will not have a key called "Schedule"
             tempData = response.json()["Schedule"]
             # Also checks to see if the match data is completely empty
-            # If it is, it won't put it in because it would crash the program
-            if len(tempData) == 0:
-                return False
-            else:
-                return True
+            # If it is, it won't put the event in because it would crash the program
+            tempEntry = tempData[0]
+            # If all of these checks pass, return true and change over the event data
+            return True
         except:
             # If it fails then return false
             print("Invalid Event Entered: %s" % self.config.eventid)
