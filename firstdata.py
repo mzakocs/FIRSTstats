@@ -123,9 +123,16 @@ class MatchData:
         # match ID or season is entered
         try:
             # Attempts to get the event data
-            response = requests.get('%s/v2.0/%s/events?eventCode=%s' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-            tempEventData = response.json()["Events"][0]
-            return True
+            response = requests.get('%s/v2.0/%s/schedule/%s/qual/hybrid' % (self.config.host, str(self.config.season), self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
+            # This is where it will fail if the event code is not valid
+            # The response from an invalid match ID will not have a key called "Schedule"
+            tempData = response.json()["Schedule"]
+            # Also checks to see if the match data is completely empty
+            # If it is, it won't put it in because it would crash the program
+            if len(tempData) == 0:
+                return False
+            else:
+                return True
         except:
             # If it fails then return false
             print("Invalid Event Entered: %s" % self.config.eventid)
