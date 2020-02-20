@@ -73,6 +73,7 @@ class Sheets:
             worksheetsList = self.sh.worksheets()
         except:
             self.gc.login()
+            worksheetsList = self.sh.worksheets()
         for worksheet in worksheetsList:
             if worksheet._properties['title'].upper() == str(self.config.eventid).upper():
                 found = True
@@ -80,6 +81,7 @@ class Sheets:
                     self.ws = self.sh.worksheet(str(self.config.eventid).upper())
                 except:
                     self.gc.login()
+                    self.ws = self.sh.worksheet(str(self.config.eventid).upper())
         return found
 
     def createSheet(self):
@@ -972,6 +974,7 @@ class UCSQP:
             self.findCell(tempcell).value = cellvalue
         except:
             self.sheet.gc.login()
+            self.findCell(tempcell).value = cellvalue
             
     def convertLocal(self, x, y):
         # Calculate pos based on origin and converts to A1
@@ -1070,6 +1073,7 @@ class UCSQP:
             return self.findCell(tempcell).value
         except:
             self.sheet.gc.login()
+            return self.findCell(tempcell).value
 
     def nukeValues(self):
         # Sets the values and formatting of all the cells to blank
@@ -1101,6 +1105,7 @@ class UCSQP:
             self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(self.o_y, self.o_x), gspread.utils.rowcol_to_a1(self.o2_y, self.o2_x)))
         except:
             self.sheet.gc.login()
+            self.cell_list = self.ws.range('%s:%s' % (gspread.utils.rowcol_to_a1(self.o_y, self.o_x), gspread.utils.rowcol_to_a1(self.o2_y, self.o2_x)))
 
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
@@ -1109,12 +1114,14 @@ class UCSQP:
                 format_cell_ranges(self.ws, self.cell_formatting)
             except:
                 self.sheet.gc.login()
+                format_cell_ranges(self.ws, self.cell_formatting)
         # Pushes cell merge requests
         if not (len(self.custom_requests["requests"]) == 0):
             try:
                 self.sheet.sh.batch_update(self.custom_requests)
             except:
                 self.sheet.gc.login()
+                self.sheet.sh.batch_update(self.custom_requests)
         # Pushes the cell value list to the google sheet
         # Uses the USER_ENTERED value input option so I can use functions
         # Only need functions for the CSGO ranks
@@ -1123,4 +1130,5 @@ class UCSQP:
                 self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')
             except:
                 self.sheet.gc.login()
+                self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')
 
