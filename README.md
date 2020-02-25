@@ -31,7 +31,7 @@ Use with Python 3.8 and up.
 ## Release History
 
 * 1.0
-    * In development
+    * First Release
 
 ## Meta
 
