@@ -480,7 +480,7 @@ class Sheets:
                                             "teleopCellPoints": "null",
                                             "controlPanelPoints": "null",
                                             "endgamePoints": "null",
-                                            "teleopPoints": "69",
+                                            "teleopPoints": "null",
                                             "shieldOperationalRankingPoint":"False",
                                             "shieldEnergizedRankingPoint":"False",
                                             "foulCount":"null",
@@ -508,10 +508,10 @@ class Sheets:
                                             "teleopPoints": "69",
                                             "shieldOperationalRankingPoint":"False",
                                             "shieldEnergizedRankingPoint":"False",
-                                            "foulCount":"0",
-                                            "techFoulCount":"0",
-                                            "adjustPoints":"0",
-                                            "foulPoints":"0",
+                                            "foulCount":"null",
+                                            "techFoulCount":"null",
+                                            "adjustPoints":"null",
+                                            "foulPoints":"null",
                                             "rp":"null",
                                             "totalPoints": "null"
                                         }
