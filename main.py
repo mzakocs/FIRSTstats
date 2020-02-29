@@ -36,6 +36,7 @@
 # would be either only matches that we have analyzed orrrr maybe all matches for 2020?
 # TODO: Add predictions for whether or not the robot has a functional auto phase and whether
 # or not it has a functional hanging thing
+# TODO: Fix crash when an empty event is inputted
 
 import firstconfig
 import firstsheets

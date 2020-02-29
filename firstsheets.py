@@ -30,7 +30,6 @@ class Sheets:
         # Creates lists to store the qualifier and playoff matches
         self.matchList = []
 
-
         # Formatting Setup
         self.font_format = CellFormat(textFormat = TextFormat(fontFamily="Montserrat"))
         self.title_format = CellFormat(textFormat = TextFormat(fontSize = 30, bold=True))
@@ -461,6 +460,65 @@ class Sheets:
                     match = matchToCheck
                     return True
         return False
+    
+    def createFakeScoreEntry(self, matchSchedule):
+        # Used to create a fake match score entry if the match hasn't been played yet
+        tempMatchEntryScore = {
+                                    "alliances": [
+                                        {
+                                            "alliance": "Blue",
+                                            "autoCellsBottom": "null",
+                                            "autoCellsOuter": "null",
+                                            "autoCellsInner": "null",
+                                            "teleopCellsBottom": "null",
+                                            "teleopCellsOuter": "null",
+                                            "teleopCellsInner": "null",
+                                            "endgameRungIsLevel": "null",
+                                            "autoInitLinePoints": "null",
+                                            "autoPoints": "null",
+                                            "teleopCellPoints": "null",
+                                            "controlPanelPoints": "null",
+                                            "endgamePoints": "null",
+                                            "teleopPoints": "69",
+                                            "shieldOperationalRankingPoint":"False",
+                                            "shieldEnergizedRankingPoint":"False",
+                                            "foulCount":"null",
+                                            "techFoulCount":"null",
+                                            "adjustPoints":"null",
+                                            "foulPoints":"null",
+                                            "rp":"null",
+                                            "totalPoints": "null"
+                                        }, 
+                                        {
+                                            "alliance": "Red",
+                                            "autoCellsBottom": "null",
+                                            "autoCellsOuter": "null",
+                                            "autoCellsInner": "null",
+                                            "teleopCellsBottom": "null",
+                                            "teleopCellsOuter": "null",
+                                            "teleopCellsInner": "null",
+                                            "endgameRungIsLevel": "null",
+                                            "autoInitLinePoints": "null",
+                                            "autoCellPoints": "null",
+                                            "autoPoints": "null",
+                                            "teleopCellPoints": "null",
+                                            "controlPanelPoints": "null",
+                                            "endgamePoints": "null",
+                                            "teleopPoints": "69",
+                                            "shieldOperationalRankingPoint":"False",
+                                            "shieldEnergizedRankingPoint":"False",
+                                            "foulCount":"0",
+                                            "techFoulCount":"0",
+                                            "adjustPoints":"0",
+                                            "foulPoints":"0",
+                                            "rp":"null",
+                                            "totalPoints": "null"
+                                        }
+                                    ], 
+                                    "matchLevel": matchSchedule["tournamentLevel"], 
+                                    "matchNumber": matchSchedule["matchNumber"]
+                                    }
+        return tempMatchEntryScore
 
     def createMatchObjects(self, wipeList = False):
         # Wipes the list if it's a new event being evaluated
@@ -468,8 +526,25 @@ class Sheets:
             self.matchList = []
         # Qualifier Match Object Creation
         for x in range(len(self.data.qualScheduleData)):
-            tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
-            if self.checkIfMatchExists(tempMatch) == False:
+            try:
+                tempMatch = Match(self.data.qualScheduleData[x], self.data.qualScoreData[x])
+                if self.checkIfMatchExists(tempMatch) == False:
+                    if (x == 0):
+                        tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth row
+                    else:
+                        tempMatch.o_y = self.matchList[-1].o_y + 18
+                    # Creates the entry in sheets
+                    # Updates the Mitch Score of the teams involved in the match if it's happened
+                    if tempMatch.matchhappened:
+                        tempMatch.updateTeamScores(self.teamDict)
+                    print ("Match Object Created: ", tempMatch.matchtitle)
+                    self.matchList.insert(len(self.matchList), tempMatch)
+                else:
+                    # If the match does exist, make sure it hasn't changed
+                    # If it has, update it to the new data
+                    self.updateMatchIfChanged(tempMatch)
+            except:
+                tempMatch = Match(self.data.qualScheduleData[x], self.createFakeScoreEntry(self.data.qualScheduleData[x]))
                 if (x == 0):
                     tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth row
                 else:
@@ -480,10 +555,7 @@ class Sheets:
                     tempMatch.updateTeamScores(self.teamDict)
                 print ("Match Object Created: ", tempMatch.matchtitle)
                 self.matchList.insert(len(self.matchList), tempMatch)
-            else:
-                # If the match does exist, make sure it hasn't changed
-                # If it has, update it to the new data
-                self.updateMatchIfChanged(tempMatch)
+                print(tempMatch.matchtitle + " hasn't happened yet!")
 
         # Playoff Match Object Creation
         for x in range(len(self.data.playoffScheduleData)):
