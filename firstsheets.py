@@ -475,6 +475,7 @@ class Sheets:
                                             "teleopCellsInner": "null",
                                             "endgameRungIsLevel": "null",
                                             "autoInitLinePoints": "null",
+                                            "autoCellPoints": "null",
                                             "autoPoints": "null",
                                             "teleopCellPoints": "null",
                                             "controlPanelPoints": "null",
