@@ -505,7 +505,7 @@ class Sheets:
                                             "teleopCellPoints": "null",
                                             "controlPanelPoints": "null",
                                             "endgamePoints": "null",
-                                            "teleopPoints": "69",
+                                            "teleopPoints": "null",
                                             "shieldOperationalRankingPoint":"False",
                                             "shieldEnergizedRankingPoint":"False",
                                             "foulCount":"null",
@@ -557,23 +557,35 @@ class Sheets:
 
         # Playoff Match Object Creation
         for x in range(len(self.data.playoffScheduleData)):
-            tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
-            if self.checkIfMatchExists(tempMatch) == False:
-                # In case for some reason theres no qualifier matches, set the origin to 4
-                if len(self.data.qualScheduleData) == 0:
-                    tempMatch.o_y = 4
+            try:
+                tempMatch = Match(self.data.playoffScheduleData[x], self.data.playoffScoreData[x])
+                if self.checkIfMatchExists(tempMatch) == False:
+                    # In case for some reason theres no qualifier matches, set the origin to 4
+                    if len(self.data.qualScheduleData) == 0:
+                        tempMatch.o_y = 4
+                    else:
+                        tempMatch.o_y = self.matchList[-1].o_y + 18
+                    # Creates the entry in sheets
+                    # Updates the Mitch Score of the teams involved in the match if it's happened
+                    if tempMatch.matchhappened:
+                        tempMatch.updateTeamScores(self.teamDict)
+                    print ("Match Entry Created: ", tempMatch.matchtitle)
+                    self.matchList.insert(len(self.matchList), tempMatch)
+                else:
+                    # If the match does exist, make sure it hasn't changed
+                    # If it has, update it to the new data
+                    self.updateMatchIfChanged(tempMatch)
+            except:
+                tempMatch = Match(self.data.playoffScheduleData[x], self.createFakeScoreEntry(self.data.playoffScheduleData[x]))
+                if (x == 0):
+                    tempMatch.o_y = 4 # If it's the very first match, set the origin to the fourth row
                 else:
                     tempMatch.o_y = self.matchList[-1].o_y + 18
                 # Creates the entry in sheets
-                # Updates the Mitch Score of the teams involved in the match if it's happened
-                if tempMatch.matchhappened:
-                    tempMatch.updateTeamScores(self.teamDict)
-                print ("Match Entry Created: ", tempMatch.matchtitle)
+                print ("Match Object Created: ", tempMatch.matchtitle)
                 self.matchList.insert(len(self.matchList), tempMatch)
-            else:
-                # If the match does exist, make sure it hasn't changed
-                # If it has, update it to the new data
-                self.updateMatchIfChanged(tempMatch)
+                print(tempMatch.matchtitle + " hasn't happened yet!")
+
         # Creates a seperate list of matches that are filtered to the config settings
         self.filterMatches()
         

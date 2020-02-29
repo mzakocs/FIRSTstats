@@ -29,7 +29,7 @@ class Match:
         ## Info about the Match Entry
         self.matchnum = self.schedule["matchNumber"]
         self.matchtype = self.schedule["tournamentLevel"]
-        self.matchhappened = not (self.schedule["postResultTime"] == "null")
+        self.matchhappened = not (self.schedule["actualStartTime"] == "null")
         self.matchtitle = ("%s Match #%s %s" % (self.schedule["description"].split()[0], self.schedule["description"].split()[1], self.formatDate()))
         self.o_x = 1 # X Location of the Entry
         self.o_y = 1 # Y Location of the Entry
