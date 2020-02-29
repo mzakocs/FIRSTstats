@@ -550,9 +550,6 @@ class Sheets:
                 else:
                     tempMatch.o_y = self.matchList[-1].o_y + 18
                 # Creates the entry in sheets
-                # Updates the Mitch Score of the teams involved in the match if it's happened
-                if tempMatch.matchhappened:
-                    tempMatch.updateTeamScores(self.teamDict)
                 print ("Match Object Created: ", tempMatch.matchtitle)
                 self.matchList.insert(len(self.matchList), tempMatch)
                 print(tempMatch.matchtitle + " hasn't happened yet!")
