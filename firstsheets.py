@@ -569,7 +569,7 @@ class Sheets:
                     # Updates the Mitch Score of the teams involved in the match if it's happened
                     if tempMatch.matchhappened:
                         tempMatch.updateTeamScores(self.teamDict)
-                    print ("Match Entry Created: ", tempMatch.matchtitle)
+                    print ("Match Object Created: ", tempMatch.matchtitle)
                     self.matchList.insert(len(self.matchList), tempMatch)
                 else:
                     # If the match does exist, make sure it hasn't changed
