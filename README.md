@@ -30,6 +30,12 @@ Use with Python 3.8 and up.
 
 ## Release History
 
+* 1.1
+   * Changed from automatic data updates to manual data updates from FRC API
+   * Fixed lots of bugs so it works on Live matches and not just matches that have already happened
+   * Fixed some wrong console messages
+   * Added Control Panel section on Home page of the Google Sheet
+
 * 1.0
     * First Release
 
