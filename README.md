@@ -57,6 +57,16 @@ All 3 are related to Google Sheets Integration:
 
 > pip3 install gspread_formatting  
 
+## How To Use
+
+1. Make sure you have Python 3 and all the correct libraries installed
+2. Setup OAuth2 credentials with Google Sheets (https://gspread.readthedocs.io/en/latest/oauth2.html) 
+3. Create a new sheet with the template below in a worksheet called "Home":
+> https://docs.google.com/spreadsheets/d/1LTABr90XucItAOB5eQoGIKWwiyWFQ74SGnD5-tM-KJo/edit?usp=sharing
+4. Share your newly created sheet with your Google Dev account
+5. Setup the config.ini file with your FIRST API creds and Google Sheets Info
+6. Run the python app using Python 3 (I reccomend using tmux on Linux to run the program as a service)
+
 ## Contributing
 
 1. Fork it (<https://github.com/zakocsm/FirstStats2020>)
