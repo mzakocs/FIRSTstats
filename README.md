@@ -43,7 +43,7 @@ Use with Python 3.8 and up.
 
 Mitch Zakocs – mitchell.zakocs@pridetronics.com  
 
-[https://github.com/zakocsm/](https://github.com/zakocsm/)  
+[https://github.com/mzakocs/](https://github.com/mzakocs/)  
 
 Distributed under the MIT License. See ``LICENSE`` for more information.
 
