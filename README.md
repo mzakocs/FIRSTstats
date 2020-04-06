@@ -69,7 +69,7 @@ All 3 are related to Google Sheets Integration:
 
 ## Contributing
 
-1. Fork it (<https://github.com/zakocsm/FirstStats2020>)
+1. Fork it (<https://github.com/mzakocs/FirstStats2020>)
 2. Create your feature branch (`git checkout -b feature/fooBar`)
 3. Commit your changes (`git commit -am 'Add some fooBar'`)
 4. Push to the branch (`git push origin feature/fooBar`)
