@@ -48,14 +48,19 @@ class FirstConfig:
         tempResult = False
         # [Event Config]
         sheets_eventid = csqp.readCell(2, 2)
-        sheets_season = int(csqp.readCell(2, 3))
+        try:
+            sheets_season = int(csqp.readCell(2, 3))
+        except:
+            sheets_season = 2020
         # [Customization]
         sheets_matchteamfilter = csqp.readCell(2, 5)
         sheets_teamsort = csqp.readCell(2, 6)
         sheets_displayqualifiermatches = csqp.readCell(2, 7)
         sheets_displayunplayedmatches = csqp.readCell(2, 8)
-        # [Power Switch] (On / Off)
-        sheets_powerswitch = csqp.readCell(1, 9)
+        # [Data Update]
+        data_update = csqp.readCell(1, 11)
+        # [Power Switch]
+        sheets_powerswitch = csqp.readCell(1, 12)
         # Compares the values of the sheets config and local config
         if not sheets_powerswitch == self.powerswitch:
             self.config['Power Switch']['powerswitch'] = sheets_powerswitch
@@ -74,12 +79,20 @@ class FirstConfig:
             tempResult = "MatchFilter"
         if not sheets_eventid == self.eventid:
             self.config['Event Config']['eventid'] = sheets_eventid
-            tempResult = "Match"
+            tempResult = "Event"
         if not int(sheets_season) == int(self.season):
             self.config['Event Config']['season'] = str(sheets_season)
-            tempResult = "Match"
+            tempResult = "Event"
+        if data_update != '':
+            print ("Updating Match and Prediction Data...")
+            tempResult = "DataUpdate"
+            # Clears the cell value so it can be used again
+            csqp.updateCellValue(1, 11, '')
         if tempResult != False:
-            with open ('config.ini', 'w') as configfile:
-                self.config.write(configfile)
-            self.checkLocalConfig()
+            if tempResult != "DataUpdate":
+                with open ('config.ini', 'w') as configfile:
+                    self.config.write(configfile)
+                self.checkLocalConfig()
+            else:
+                csqp.pushCellUpdate()
         return tempResult

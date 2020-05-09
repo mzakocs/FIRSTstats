@@ -30,6 +30,12 @@ Use with Python 3.8 and up.
 
 ## Release History
 
+* 1.1
+   * Changed from automatic data updates to manual data updates from FRC API
+   * Fixed lots of bugs so it works on Live matches and not just matches that have already happened
+   * Fixed some wrong console messages
+   * Added Control Panel section on Home page of the Google Sheet
+
 * 1.0
     * First Release
 
@@ -37,7 +43,7 @@ Use with Python 3.8 and up.
 
 Mitch Zakocs – mitchell.zakocs@pridetronics.com  
 
-[https://github.com/zakocsm/](https://github.com/zakocsm/)  
+[https://github.com/mzakocs/](https://github.com/mzakocs/)  
 
 Distributed under the MIT License. See ``LICENSE`` for more information.
 
@@ -51,9 +57,19 @@ All 3 are related to Google Sheets Integration:
 
 > pip3 install gspread_formatting  
 
+## How To Use
+
+1. Make sure you have Python 3 and all the correct libraries installed
+2. Setup OAuth2 credentials with Google Sheets (https://gspread.readthedocs.io/en/latest/oauth2.html) 
+3. Create a new sheet with the template below in a worksheet called "Home":
+> https://docs.google.com/spreadsheets/d/1LTABr90XucItAOB5eQoGIKWwiyWFQ74SGnD5-tM-KJo/edit?usp=sharing
+4. Share your newly created sheet with your Google Dev account
+5. Setup the config.ini file with your FIRST API creds and Google Sheets Info
+6. Run the python app using Python 3 (I reccomend using tmux on Linux to run the program as a service)
+
 ## Contributing
 
-1. Fork it (<https://github.com/zakocsm/FirstStats2020>)
+1. Fork it (<https://github.com/mzakocs/FirstStats2020>)
 2. Create your feature branch (`git checkout -b feature/fooBar`)
 3. Commit your changes (`git commit -am 'Add some fooBar'`)
 4. Push to the branch (`git push origin feature/fooBar`)
