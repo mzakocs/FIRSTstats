@@ -65,7 +65,7 @@ def main():
     # Main Execution Loop
     starttime = time.time()
     print("Service started at:", datetime.datetime.fromtimestamp(starttime).strftime('%Y-%m-%d %H:%M:%S'))
-    csqp = firstsheets.UCSQP(sheets, 4, 6, 5, 14, configmode = True)
+    csqp = firstsheets.UCSQP(sheets, 4, 6, 5, 14, configmode = True) #csqp for the home page
     while True:
         # Grabs the new config from the sheet
         csqp.updateList()
@@ -103,13 +103,13 @@ def main():
             validMatch = data.checkIfMatchValid()
             if validMatch == True:
                 if configChanged == "Match":
-                    # If the sheet doesn't exist, that means the match was changed
                     # This grabs all of the new match data and sets up a new sheet for it
                     data.getScheduleData()
                     data.getScoreData()
                     data.getEventData()
                     data.getTeamData()
                     sheets.data = data
+                    # If the sheet doesn't exist, that means the match was changed
                     if sheets.checkIfSheetExists() == False:
                         sheets.createSheet()
                     sheets.createTeamObjects()

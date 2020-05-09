@@ -20,14 +20,14 @@ class Sheets:
         self.config = config
         self.data = data
 
-        # Google Drive OAuth2 Setup
+        # Google Sheets OAuth2 Setup
         # gspread.readthedocs.io/en/latest/
         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         credentials = ServiceAccountCredentials.from_json_keyfile_name(self.config.oauthjsonpath, scope)
         self.gc = gspread.authorize(credentials)
         self.sh = self.gc.open_by_key(self.config.sheetid)
 
-        # Creates lists to store the qualifier and playoff matches
+        # Creates list to store the qualifier and playoff matches
         self.matchList = []
 
         # Formatting Setup
@@ -106,8 +106,7 @@ class Sheets:
     
     def checkManualEntry(self):
         # Function for checking data if manual data retrieval is on
-        # Currently not in use. If you want to use this, the function
-        # is already setup in the main loop but it's not going to work
+        # Currently not in use. If you want to use this, it's not going to work
         # The manual data input box is in the Templates section on the home page
         # Simply put the top left corner at 1, 21 and have fun getting it to work properly
         csqp = UCSQP(self, 1, 21, 5, 29, configmode = True)
@@ -454,6 +453,7 @@ class Sheets:
             # Finds the match
             if match.matchtitle == matchToCheck.matchtitle:
                 # Checks if the data has been changed
+                # This just checks on the match time but you could check on literally anything
                 if matchToCheck.schedule["postResultTime"] != match.schedule["postResultTime"]:
                     # Stores the notes so they don't get deleted, swaps the match with the new updated one, and puts the notes back
                     matchToCheck.notes = match.notes
@@ -597,6 +597,7 @@ class Sheets:
             teamFilter = self.config.matchteamfilter.split(',')
             for team in teamFilter: 
                 try:
+                    # This is a check to make sure all the teams inputted are actually integers
                     intnum = int(team)
                     team = intnum
                 except:
@@ -658,7 +659,7 @@ class Sheets:
 
     def nukeMatchEntries(self):
         # Deletes all of the match entries, used for filters
-        grabYLimit = (len(self.matchList) * 18) + 2
+        grabYLimit = (len(self.matchList) * 18) + 2 # since an entry is 18 cells tall, and the title bar is 2 cells tall, this is the total size of the sheet
         csqp = UCSQP(self, self.matchList[0].o_x, self.matchList[0].o_y, self.matchList[0].o_x + 5, grabYLimit)
 
         # Makes sure the notes don't get deleted
@@ -1158,7 +1159,7 @@ class UCSQP:
             return self.findCell(tempcell).value
 
     def nukeValues(self):
-        # Sets the values and formatting of all the cells to blank
+        # Sets the values and formatting of all the cells in the UCSQP to blank
         temprequest = {
                         "updateCells": {
                             "range": {
@@ -1191,6 +1192,7 @@ class UCSQP:
 
     def pushCellUpdate(self):
         # Pushes the array created by updateCellFormatting to the google sheet
+        # This MUST be ran at the end of any UCSQP edit for anything to actually happen on the sheet
         if not (len(self.cell_formatting) == 0):
             try:
                 format_cell_ranges(self.ws, self.cell_formatting)
@@ -1205,8 +1207,7 @@ class UCSQP:
                 self.sheet.gc.login()
                 self.sheet.sh.batch_update(self.custom_requests)
         # Pushes the cell value list to the google sheet
-        # Uses the USER_ENTERED value input option so I can use functions
-        # Only need functions for the CSGO ranks
+        # Uses the USER_ENTERED value input option for spreadsheet functions, otherwise they wouldn't work
         if not (len(self.cell_list) == 0):
             try:
                 self.ws.update_cells(self.cell_list, value_input_option = 'USER_ENTERED')

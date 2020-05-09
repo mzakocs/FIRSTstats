@@ -87,13 +87,11 @@ class MatchData:
             try: 
                 response = requests.get('%s/v2.0/%s/teams?eventCode=%s' % (self.config.host, self.config.season, self.config.eventid), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
                 if (response.json()["pageTotal"] > 1):
-                    pageList = []
-                    self.teamData = {"teams" : []}
+                    self.teamData = []
                     for x in range(0, response.json()["pageTotal"]):
                         tempresponse = requests.get('%s/v2.0/%s/teams?eventCode=%s?page=%s' % (self.config.host, self.config.season, self.config.eventid, x), headers={'Accept': 'application/json', 'Authorization': 'Basic %s' % self.config.authString})
-                        pageList.insert(len(pageList), tempresponse.json()['teams'])
-                    for x in pageList:
-                        self.teamData["teams"] += x
+                        for x in tempresponse['teams']:
+                            self.teamData.append(x)
                 else:
                     self.teamData = response.json()["teams"]
             except:
@@ -102,6 +100,9 @@ class MatchData:
             print(json.dumps(self.teamData, sort_keys=True, indent=4))
             
     def dataChanged(self):
+        # This is not used anymore, I implemented manual data updating in the Home screen so that
+        # you don't have to lose your place on the spreadsheet when the data gets updated.
+        # This also makes the program take up a LOT less processing power when it is idle.
         # Stores the old schedules to check
         oldQualSchedule = self.qualScheduleData
         oldQualScore = self.qualScoreData

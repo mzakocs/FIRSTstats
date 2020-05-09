@@ -1,7 +1,6 @@
 ############################################################################################################################
 # FirstConfig                                                                                                              #
 # Used to grab config files from config.ini                                                                                #
-# TODO: Make config editable from Google Sheets                                                                            #
 ############################################################################################################################
 
 import os
@@ -55,7 +54,7 @@ class FirstConfig:
         sheets_teamsort = csqp.readCell(2, 6)
         sheets_displayqualifiermatches = csqp.readCell(2, 7)
         sheets_displayunplayedmatches = csqp.readCell(2, 8)
-        # [Power Switch]
+        # [Power Switch] (On / Off)
         sheets_powerswitch = csqp.readCell(1, 9)
         # Compares the values of the sheets config and local config
         if not sheets_powerswitch == self.powerswitch:
