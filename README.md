@@ -64,12 +64,12 @@ All 3 are related to Google Sheets Integration:
 ## How To Use
 
 1. Make sure you have Python 3 and all the correct libraries installed
-2. Setup OAuth2 credentials with Google Sheets (https://gspread.readthedocs.io/en/latest/oauth2.html) 
-3. Create a new sheet with the template below in a worksheet called "Home":
-> https://docs.google.com/spreadsheets/d/1LTABr90XucItAOB5eQoGIKWwiyWFQ74SGnD5-tM-KJo/edit?usp=sharing
-4. Share your newly created sheet with your Google Dev account
-5. Setup the config.ini file with your FIRST API creds and Google Sheets Info
-6. Run the python app using Python 3 (I reccomend using tmux on Linux to run the program as a service)
+2. Setup OAuth2 credentials with Google Sheets (set up using a service account, not an OAuth2 client) (https://gspread.readthedocs.io/en/latest/oauth2.html) 
+3. Create a new Google Sheet using the template below:
+> https://docs.google.com/spreadsheets/d/1hAWxnuBXVVpDlDvqu9KHDjWYo9dXWyrs9Y06ru0uEkc/edit?usp=sharing
+4. Share your newly created sheet with the email from your service account
+5. Setup the config.ini file with your FIRST API credentials and Google Sheets Info
+6. Run the python app using Python 3 (I recommend using tmux on Linux to run the program as a service)
 
 ## Contributing
 
