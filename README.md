@@ -1,4 +1,4 @@
-# FIRSTStats2020
+# FIRSTstats 2020
 > An advanced statistics prediction engine for FIRST Robotics Competitions.  
 
 In previous seasons of FIRST, our team used a complicated and messy spreadsheet for event scouting and for match predictions. Our prediction algorithm was rudimentary and extremely inaccurate, and we wanted something that was more automated and higher quality than the excel file we were using before.  
